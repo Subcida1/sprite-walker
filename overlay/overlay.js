@@ -705,10 +705,16 @@ class Sprite {
     }
 
     setGhost(isGhost) {
-        // Don't apply immediately — defer until hurt() fires so ghost visual syncs with hit animation
-        this.pendingGhost = isGhost;
-        if (!isGhost) {
-            this.isGhost = false;
+        this.isGhost = isGhost;
+        this.pendingGhost = false;
+        if (isGhost) {
+            this.state = 'idle';
+            this.stateTimer = 0;
+            this.ascending = true;
+            this.ascensionStartTime = Date.now();
+            this.ascensionStartY = this.y;
+            this.ascensionTargetY = canvas.height - 65;
+        } else {
             this.ascending = false;
         }
     }

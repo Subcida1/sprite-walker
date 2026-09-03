@@ -176,7 +176,6 @@ wss.on('connection', (ws) => {
           }
         }
       } else if (msg.type === 'ATTACK_IMPACT') {
-        console.log(`[DEBUG] ATTACK_IMPACT received:`, msg);
         const attackerKey = (msg.user || '').toLowerCase();
         const targetKey = (msg.target || '').toLowerCase();
         if (
