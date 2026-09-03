@@ -1017,8 +1017,8 @@ class SlimeMob {
         this.squashY = 1;
         this.hitEffectTimer = 0;
         this.exited = false;
-        // Randomize speed slightly so each slime has unique movement pacing (±20%)
-        this.speed *= (Math.random() * 0.4 + 0.8);
+        this.baseSpeed = this.speed;
+        this.speed = this.baseSpeed * (0.7 + Math.random() * 0.6);
         // Smooth hop phase initialized randomly to avoid frame-1 jitter
         this.hopPhase = Math.random() * Math.PI * 2;
         // New slimes from splits start moving almost immediately (10-40 frames = 0.17-0.67s)
@@ -1101,11 +1101,11 @@ class SlimeMob {
             this.forcedHuntActive = false;
         }
 
-        let targetDist = this.targetSprite ? Math.abs(this.targetSprite.x - this.x) : Infinity;
+        let targetDist = this.targetSprite ? Math.abs(this.wrappedDiff(this.targetSprite.x, this.x)) : Infinity;
 
         if (this.targetSprite && (targetDist < 140 || this.forcedHuntActive)) {
             // Chase player (hysteresis band prevents chase/reach flicker)
-            const dx = this.targetSprite.x - this.x;
+            const dx = this.wrappedDiff(this.targetSprite.x, this.x);
             this.facingRight = dx > 0;
             const baseReach = 8.0; // tight physical touch range matching player attacks
             // Use hysteresis: once in chase, keep chasing until within 60% of reach
@@ -1113,9 +1113,11 @@ class SlimeMob {
 
             if (Math.abs(dx) > chaseThresh) {
                 this.isInChase = true;
+                // Per-hop speed fluctuation for unique movement pacing
+                if (Math.random() < 0.35) this.speed = this.baseSpeed * (0.7 + Math.random() * 0.6);
                 const moveStep = Math.sign(dx) * (this.speed * 1.1);
                 this.x += moveStep;
-                this.x = Math.max(30, Math.min(canvas.width - 30, this.x));
+                this.x = this.wrapX(this.x);
 
                 this.chaseDist = (this.chaseDist || 0) + Math.abs(moveStep);
                 const hopCycle = 45; // pixels per hop cycle during chase
@@ -1163,35 +1165,36 @@ class SlimeMob {
             if (this.stateTimer > 0) {
                 this.stateTimer--;
             } else {
-                // Big slimes: 15% chance to exit offscreen, otherwise hop around on screen
-                // Medium/tiny: 10% chance to exit
+                // Fluctuate speed for next hop cycle
+                this.speed = this.baseSpeed * (0.7 + Math.random() * 0.6);
                 const exitChance = this.tier === 'big' ? 0.15 : 0.1;
                 if (Math.random() < exitChance) {
                     const exitLeft = Math.random() > 0.5;
                     this.startX = this.x;
                     this.targetX = exitLeft ? -80 : canvas.width + 80;
-                    this.totalDist = Math.abs(this.targetX - this.startX);
-                    const desiredHopLength = this.size * (Math.random() * 0.4 + 1.0);
+                    this.totalDist = this.wrappedDist(this.startX, this.targetX);
+                    const desiredHopLength = this.size * (Math.random() * 0.5 + 1.0);
                     this.hopCount = Math.max(2, Math.round(this.totalDist / desiredHopLength));
                     this.state = 'exiting';
                 } else {
                     this.startX = this.x;
-                    this.targetX = Math.random() * (canvas.width - 160) + 80;
-                    this.totalDist = Math.abs(this.targetX - this.startX);
-                    const desiredHopLength = this.size * (Math.random() * 0.4 + 1.0);
+                    // Pick target anywhere in continuous wrapped space
+                    this.targetX = Math.random() * (canvas.width + 200) - 100;
+                    this.totalDist = this.wrappedDist(this.startX, this.targetX);
+                    const desiredHopLength = this.size * (Math.random() * 0.5 + 1.0);
                     this.hopCount = Math.max(1, Math.round(this.totalDist / desiredHopLength));
                     this.state = 'hopping';
                 }
             }
         } else if (this.state === 'hopping') {
-            const dx = this.targetX - this.x;
+            const dx = this.wrappedDiff(this.targetX, this.x);
             this.facingRight = dx > 0;
 
             if (Math.abs(dx) > 1.5) {
                 this.x += Math.sign(dx) * Math.min(this.speed, Math.abs(dx));
-                this.x = Math.max(20, Math.min(canvas.width - 20, this.x));
+                this.x = this.wrapX(this.x);
 
-                const traveled = Math.abs(this.x - this.startX);
+                const traveled = this.wrappedDist(this.startX, this.x);
                 const progress = Math.min(1, traveled / Math.max(1, this.totalDist));
                 const hopHeight = this.size * 0.45;
                 const sinVal = Math.sin(progress * Math.PI * this.hopCount);
@@ -1205,7 +1208,7 @@ class SlimeMob {
                 this.squashX = 1;
                 this.squashY = 1;
                 this.state = 'idle';
-                this.stateTimer = 90 + Math.floor(Math.random() * 120); // pause 1.5 to 3.5s before next hop
+                this.stateTimer = Math.floor(Math.random() * 180) + 60; // 1 to 4 seconds staggered pause
             }
         } else if (this.state === 'exiting') {
             const dx = this.targetX - this.x;
@@ -1228,12 +1231,18 @@ class SlimeMob {
         }
     }
 
-    wrappedDiff(target, current) {
-        return target - current;
+    // Screen wrapping utilities (same as player sprites)
+    wrapX(x) {
+        return (x + canvas.width) % canvas.width;
     }
-
+    wrappedDiff(target, current) {
+        let diff = target - current;
+        if (diff > canvas.width / 2) diff -= canvas.width;
+        if (diff < -canvas.width / 2) diff += canvas.width;
+        return diff;
+    }
     wrappedDist(a, b) {
-        return Math.abs(b - a);
+        return Math.abs(this.wrappedDiff(b, a));
     }
 
     hurt(amount = 2) {
