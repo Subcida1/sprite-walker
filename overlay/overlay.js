@@ -1030,18 +1030,7 @@ class SlimeMob {
 
     update() {
         this.groundY = canvas.height - 25;
-        // No boundary clamping: slimes wrap seamlessly across screen edges like player sprites
-
-        // Anti-bunching / Separation steering — push apart from other nearby slimes
-        for (const other of slimeMobs) {
-            if (other === this) continue;
-            const sepDist = this.wrappedDist(other.x, this.x);
-            if (sepDist < 60 && sepDist > 0) {
-                const pushDir = Math.sign(this.wrappedDiff(this.x, other.x));
-                this.x += pushDir * (60 - sepDist) * 0.04;
-                this.x = this.wrapX(this.x);
-            }
-        }
+        // Clean non-physical movement: slimes pass through players and each other freely with zero collision/pushing.
 
         if (this.hitEffectTimer > 0) this.hitEffectTimer--;
 
@@ -1109,11 +1098,11 @@ class SlimeMob {
             this.forcedHuntActive = false;
         }
 
-        let targetDist = this.targetSprite ? Math.abs(this.wrappedDiff(this.targetSprite.x, this.x)) : Infinity;
+        let targetDist = this.targetSprite ? Math.abs(this.targetSprite.x - this.x) : Infinity;
 
         if (this.targetSprite && (targetDist < 140 || this.forcedHuntActive)) {
             // Chase player (hysteresis band prevents chase/reach flicker)
-            const dx = this.wrappedDiff(this.targetSprite.x, this.x);
+            const dx = this.targetSprite.x - this.x;
             this.facingRight = dx > 0;
             const baseReach = 8.0; // tight physical touch range matching player attacks
             // Use hysteresis: once in chase, keep chasing until within 60% of reach
@@ -1125,7 +1114,6 @@ class SlimeMob {
                 if (Math.random() < 0.35) this.speed = this.baseSpeed * (0.4 + Math.random() * 1.8);
                 const moveStep = Math.sign(dx) * (this.speed * 1.1);
                 this.x += moveStep;
-                this.x = this.wrapX(this.x);
 
                 this.chaseDist = (this.chaseDist || 0) + Math.abs(moveStep);
                 const hopCycle = 45; // pixels per hop cycle during chase
@@ -1180,29 +1168,28 @@ class SlimeMob {
                     const exitLeft = Math.random() > 0.5;
                     this.startX = this.x;
                     this.targetX = exitLeft ? -80 : canvas.width + 80;
-                    this.totalDist = this.wrappedDist(this.startX, this.targetX);
+                    this.totalDist = Math.abs(this.targetX - this.startX);
                     const desiredHopLength = this.size * (Math.random() * 0.5 + 1.0);
                     this.hopCount = Math.max(2, Math.round(this.totalDist / desiredHopLength));
                     this.state = 'exiting';
                 } else {
                     this.startX = this.x;
-                    // Pick target anywhere in continuous wrapped space
-                    this.targetX = Math.random() * (canvas.width + 200) - 100;
-                    this.totalDist = this.wrappedDist(this.startX, this.targetX);
+                    // Pick target strictly within screen bounds
+                    this.targetX = Math.random() * (canvas.width - 160) + 80;
+                    this.totalDist = Math.abs(this.targetX - this.startX);
                     const desiredHopLength = this.size * (Math.random() * 0.5 + 1.0);
                     this.hopCount = Math.max(1, Math.round(this.totalDist / desiredHopLength));
                     this.state = 'hopping';
                 }
             }
         } else if (this.state === 'hopping') {
-            const dx = this.wrappedDiff(this.targetX, this.x);
+            const dx = this.targetX - this.x;
             this.facingRight = dx > 0;
 
             if (Math.abs(dx) > 1.5) {
                 this.x += Math.sign(dx) * Math.min(this.speed, Math.abs(dx));
-                this.x = this.wrapX(this.x);
 
-                const traveled = this.wrappedDist(this.startX, this.x);
+                const traveled = Math.abs(this.x - this.startX);
                 const progress = Math.min(1, traveled / Math.max(1, this.totalDist));
                 const hopHeight = this.size * 0.45;
                 const sinVal = Math.sin(progress * Math.PI * this.hopCount);
@@ -1263,19 +1250,8 @@ class SlimeMob {
         }
     }
 
-    // Screen wrapping utilities (same as player sprites)
-    wrapX(x) {
-        return (x + canvas.width) % canvas.width;
-    }
-    wrappedDiff(target, current) {
-        let diff = target - current;
-        if (diff > canvas.width / 2) diff -= canvas.width;
-        if (diff < -canvas.width / 2) diff += canvas.width;
-        return diff;
-    }
-    wrappedDist(a, b) {
-        return Math.abs(this.wrappedDiff(b, a));
-    }
+    // No wrapping utilities: slimes navigate in linear screen coordinates
+    // and exit cleanly off-edge instead of wrapping around.
 
     hurt(amount = 2) {
         this.health -= amount;
