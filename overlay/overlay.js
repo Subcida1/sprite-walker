@@ -371,28 +371,25 @@ class Sprite {
         }
 
         if (this.state === 'idle') {
-            // Random chance to start hopping to a new position ANYWHERE (including off-screen for wrap)
+            // Random chance to start hopping to a new position on screen
             if (Math.random() < 0.015) {
                 this.startX = this.x;
-                // Pick target anywhere in continuous wrapped space
-                this.targetX = Math.random() * (canvas.width + 200) - 100; // -100 to canvas.width+100
-                this.totalDist = this.wrappedDist(this.startX, this.targetX);
+                // Pick target strictly within screen bounds
+                this.targetX = Math.random() * (canvas.width - 160) + 80;
+                this.totalDist = Math.abs(this.targetX - this.startX);
                 const desiredHopLength = 60; // px per bounce
                 this.hopCount = Math.max(1, Math.round(this.totalDist / desiredHopLength));
                 this.state = 'hopping';
             }
         } else if (this.state === 'hopping') {
-            // Move toward target using wrapped direction (shortest path across screen edges)
-            const dx = this.wrappedDiff(this.targetX, this.x);
+            const dx = this.targetX - this.x;
             this.facingRight = dx > 0;
             if (Math.abs(dx) > 1.5) {
                 this.x += Math.sign(dx) * Math.min(this.speed, Math.abs(dx));
-                // Wrap position continuously
-                this.x = this.wrapX(this.x);
-                // Progress along wrapped path
-                const traveled = this.wrappedDist(this.startX, this.x);
-                const progress = Math.min(1, traveled / this.totalDist);
-                this.y = this.groundY - Math.abs(Math.sin(progress * Math.PI * this.hopCount)) * 14;
+                // Linear movement without wrap-teleporting
+                const traveled = Math.abs(this.x - this.startX);
+                const progress = Math.min(1, traveled / Math.max(1, this.totalDist));
+                this.y = this.groundY - Math.abs(Math.sin(progress * Math.PI * this.hopCount)) * 14; // wait, Math.sin
             } else {
                 this.x = this.targetX;
                 this.y = this.groundY;
