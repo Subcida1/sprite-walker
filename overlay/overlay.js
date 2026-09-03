@@ -1218,6 +1218,30 @@ class SlimeMob {
                 this.state = 'idle';
                 this.stateTimer = Math.floor(Math.random() * 180) + 60; // 1 to 4 seconds staggered pause
             }
+        } else if (this.state === 'entering') {
+            const dx = this.targetX - this.x;
+            this.facingRight = dx > 0;
+
+            if (Math.abs(dx) > 1.5) {
+                this.x += Math.sign(dx) * Math.min(this.speed, Math.abs(dx));
+                // Do NOT wrap X during entrance so slimes stay offscreen until reaching target
+
+                const traveled = Math.abs(this.x - this.startX);
+                const progress = Math.min(1, traveled / Math.max(1, this.totalDist));
+                const hopHeight = this.size * 0.45;
+                const sinVal = Math.sin(progress * Math.PI * this.hopCount);
+                this.y = this.groundY - Math.abs(sinVal) * hopHeight;
+
+                this.squashX = 1 + sinVal * 0.18;
+                this.squashY = 1 - sinVal * 0.18;
+            } else {
+                this.x = this.targetX;
+                this.y = this.groundY;
+                this.squashX = 1;
+                this.squashY = 1;
+                this.state = 'idle';
+                this.stateTimer = Math.floor(Math.random() * 180) + 60;
+            }
         } else if (this.state === 'exiting') {
             const dx = this.targetX - this.x;
             this.facingRight = dx > 0;
@@ -1386,7 +1410,7 @@ function spawnSlimeFromEdge() {
     slime.startX = startX;
     slime.totalDist = Math.abs(targetX - startX);
     slime.hopCount = Math.max(2, Math.round(slime.totalDist / 70));
-    slime.state = 'hopping';
+    slime.state = 'entering';
     slimeMobs.push(slime);
     console.log(`[Slime] Big slime spawned offscreen at x=${startX}, hopping to x=${targetX}`);
 }
