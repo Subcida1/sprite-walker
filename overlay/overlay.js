@@ -1030,10 +1030,7 @@ class SlimeMob {
 
     update() {
         this.groundY = canvas.height - 25;
-        // If exiting, allow movement offscreen until fully past boundary
-        if (this.state !== 'exiting') {
-            this.x = Math.max(20, Math.min(canvas.width - 20, this.x));
-        }
+        // No boundary clamping: slimes wrap seamlessly across screen edges like player sprites
 
         if (this.hitEffectTimer > 0) this.hitEffectTimer--;
 
