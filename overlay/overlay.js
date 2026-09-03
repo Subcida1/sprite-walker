@@ -1017,6 +1017,8 @@ class SlimeMob {
         this.squashY = 1;
         this.hitEffectTimer = 0;
         this.exited = false;
+        // Randomize speed slightly so each slime has unique movement pacing (±20%)
+        this.speed *= (Math.random() * 0.4 + 0.8);
         // Smooth hop phase initialized randomly to avoid frame-1 jitter
         this.hopPhase = Math.random() * Math.PI * 2;
         // New slimes from splits start moving almost immediately (10-40 frames = 0.17-0.67s)
@@ -1169,14 +1171,14 @@ class SlimeMob {
                     this.startX = this.x;
                     this.targetX = exitLeft ? -80 : canvas.width + 80;
                     this.totalDist = Math.abs(this.targetX - this.startX);
-                    const desiredHopLength = this.size * 1.2;
+                    const desiredHopLength = this.size * (Math.random() * 0.4 + 1.0);
                     this.hopCount = Math.max(2, Math.round(this.totalDist / desiredHopLength));
                     this.state = 'exiting';
                 } else {
                     this.startX = this.x;
                     this.targetX = Math.random() * (canvas.width - 160) + 80;
                     this.totalDist = Math.abs(this.targetX - this.startX);
-                    const desiredHopLength = this.size * 1.2;
+                    const desiredHopLength = this.size * (Math.random() * 0.4 + 1.0);
                     this.hopCount = Math.max(1, Math.round(this.totalDist / desiredHopLength));
                     this.state = 'hopping';
                 }
@@ -1262,19 +1264,22 @@ class SlimeMob {
         const clampX = (x) => Math.max(50, Math.min(canvas.width - 50, x));
 
         if (this.tier === 'big') {
-            // Split into 2 medium slimes
+            // Split into 2 medium slimes with randomized spread, direction, and distance
             for (let i = 0; i < 2; i++) {
-                const offset = (i - 0.5) * 50;
-                const childX = clampX(this.x + offset);
+                const spreadOffset = (Math.random() - 0.5) * 80;
+                const childX = clampX(this.x + spreadOffset);
                 const child = new SlimeMob(childX, this.groundY, 'medium');
                 child.state = 'hopping';
                 child.startX = childX;
-                child.targetX = clampX(childX + (i === 0 ? -90 : 90));
+                // Random jump direction and distance (between 70px and 220px away)
+                const jumpDist = Math.random() * 150 + 70;
+                const jumpDir = Math.random() < 0.5 ? -1 : 1;
+                child.targetX = clampX(childX + jumpDir * jumpDist);
                 child.totalDist = Math.abs(child.targetX - child.startX);
-                const desiredHopLength = child.size * 1.2;
+                const desiredHopLength = child.size * (Math.random() * 0.4 + 1.0);
                 child.hopCount = Math.max(1, Math.round(child.totalDist / desiredHopLength));
-                child.hopPhase = 0;
-                child.stateTimer = 0;
+                child.hopPhase = Math.random() * Math.PI * 2;
+                child.stateTimer = Math.floor(Math.random() * 40) + 15;
                 child.attackCooldown = 1200; // 20 second spawn immunity before attacking
                 slimeMobs.push(child);
             }

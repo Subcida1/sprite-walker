@@ -2,107 +2,35 @@
 > sprite-walker@1.0.0 start
 > node server/index.js
 
-[2026-09-03T08:30:45.474Z] Sprite Walker server running at http://localhost:3847
-[2026-09-03T08:30:45.475Z] Listening to Twitch channel: #subcidal
-[2026-09-03T08:30:45.475Z] Max sprites: 50
-[2026-09-03T08:30:45.475Z] Cooldowns: wave=4000ms, attack=5000ms
-[2026-09-03T08:30:45.474Z] Sprite Walker server running at http://localhost:3847
-[2026-09-03T08:30:45.475Z] Listening to Twitch channel: #subcidal
-[2026-09-03T08:30:45.475Z] Max sprites: 50
-[2026-09-03T08:30:45.475Z] Cooldowns: wave=4000ms, attack=5000ms
-[2026-09-03T08:31:32.400Z] [Twitch] Subcidal: !join
-[2026-09-03T08:31:32.400Z] [Twitch] Subcidal: !join
-[2026-09-03T08:31:32.400Z] [Join] Subcidal joined with Minecraft skin: Subcidal
-[2026-09-03T08:31:32.400Z] [Join] Subcidal joined with Minecraft skin: Subcidal
-[2026-09-03T08:31:33.245Z] [Twitch] Subcidal: !ai
-[2026-09-03T08:31:33.245Z] [Twitch] Subcidal: !ai
-[2026-09-03T08:31:33.245Z] [AI Spawn] AI character spawned with Steve skin
-[2026-09-03T08:31:33.245Z] [AI Spawn] AI character spawned with Steve skin
-[2026-09-03T08:31:41.924Z] OBS Overlay connected via WebSocket
-[2026-09-03T08:31:41.924Z] OBS Overlay connected via WebSocket
-[2026-09-03T08:31:48.891Z] [Twitch] Subcidal: !hit ai
-[2026-09-03T08:31:48.891Z] [Twitch] Subcidal: !hit ai
-[2026-09-03T08:31:52.639Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:31:52.639Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:31:52.639Z] [Attack] Subcidal initiated attack on AI
-[2026-09-03T08:31:52.639Z] [Attack] Subcidal initiated attack on AI
-[2026-09-03T08:31:53.175Z] [Attack Impact] Subcidal hit AI (-25 HP -> 75/100)
-[2026-09-03T08:31:53.175Z] [Attack Impact] Subcidal hit AI (-25 HP -> 75/100)
-[2026-09-03T08:32:07.206Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:32:07.206Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:32:07.206Z] [Attack] Subcidal initiated attack on AI
-[2026-09-03T08:32:07.206Z] [Attack] Subcidal initiated attack on AI
-[2026-09-03T08:32:11.507Z] [Attack Impact] Subcidal hit AI (-25 HP -> 50/100)
-[2026-09-03T08:32:11.507Z] [Attack Impact] Subcidal hit AI (-25 HP -> 50/100)
-[2026-09-03T08:32:14.275Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:32:14.275Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:32:14.275Z] [Attack] Subcidal initiated attack on AI
-[2026-09-03T08:32:14.275Z] [Attack] Subcidal initiated attack on AI
-[2026-09-03T08:32:18.507Z] [Attack Impact] Subcidal hit AI (-25 HP -> 25/100)
-[2026-09-03T08:32:18.507Z] [Attack Impact] Subcidal hit AI (-25 HP -> 25/100)
-[2026-09-03T08:32:21.409Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:32:21.409Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:32:21.410Z] [Attack] Subcidal initiated attack on AI
-[2026-09-03T08:32:21.410Z] [Attack] Subcidal initiated attack on AI
-[2026-09-03T08:32:23.080Z] [Twitch] Subcidal: !slime
-[2026-09-03T08:32:23.080Z] [Twitch] Subcidal: !slime
-[2026-09-03T08:32:23.080Z] [Slime] Manual slime spawn requested by Subcidal
-[2026-09-03T08:32:23.080Z] [Slime] Manual slime spawn requested by Subcidal
-[2026-09-03T08:32:23.840Z] [Attack Impact] Subcidal hit AI (-25 HP -> 0/100)
-[2026-09-03T08:32:23.840Z] [Attack Impact] Subcidal hit AI (-25 HP -> 0/100)
-[2026-09-03T08:32:23.840Z] [Ghost] AI has died and entered GHOST mode!
-[2026-09-03T08:32:23.840Z] [KillStreak] Subcidal kill streak is now 1
-[2026-09-03T08:32:23.840Z] [Ghost] AI has died and entered GHOST mode!
-[2026-09-03T08:32:23.840Z] [KillStreak] Subcidal kill streak is now 1
-[2026-09-03T08:32:27.053Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:32:27.053Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:32:27.053Z] [Attack] Failed/Ignored from Subcidal targeting ai (valid/alive target?)
-[2026-09-03T08:32:27.053Z] [Attack] Failed/Ignored from Subcidal targeting ai (valid/alive target?)
-[2026-09-03T08:32:32.294Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:32:32.294Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:32:32.295Z] [Attack] Failed/Ignored from Subcidal targeting ai (valid/alive target?)
-[2026-09-03T08:32:32.295Z] [Attack] Failed/Ignored from Subcidal targeting ai (valid/alive target?)
-[2026-09-03T08:32:35.107Z] [Slime Attack] Slime hit Subcidal for -3 HP (97/100)
-[2026-09-03T08:32:35.107Z] [Slime Attack] Slime hit Subcidal for -3 HP (97/100)
-[2026-09-03T08:32:35.120Z] [Twitch] Subcidal: !attack
-[2026-09-03T08:32:35.120Z] [Cooldown] Subcidal attack on cooldown
-[2026-09-03T08:32:35.120Z] [Twitch] Subcidal: !attack
-[2026-09-03T08:32:35.120Z] [Cooldown] Subcidal attack on cooldown
-[2026-09-03T08:32:39.305Z] [Twitch] Subcidal: !attack
-[2026-09-03T08:32:39.305Z] [Twitch] Subcidal: !attack
-[2026-09-03T08:32:39.305Z] [Attack] Subcidal attacked slime/mob target (nearest)
-[2026-09-03T08:32:39.305Z] [Attack] Subcidal attacked slime/mob target (nearest)
-[2026-09-03T08:32:43.549Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:32:43.549Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:32:43.549Z] [Cooldown] Subcidal attack on cooldown
-[2026-09-03T08:32:43.549Z] [Cooldown] Subcidal attack on cooldown
-[2026-09-03T08:32:46.894Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:32:46.894Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:32:46.894Z] [Attack] Failed/Ignored from Subcidal targeting ai (valid/alive target?)
-[2026-09-03T08:32:46.894Z] [Attack] Failed/Ignored from Subcidal targeting ai (valid/alive target?)
-[2026-09-03T08:32:53.325Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:32:53.325Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:32:53.325Z] [Attack] Failed/Ignored from Subcidal targeting ai (valid/alive target?)
-[2026-09-03T08:32:53.325Z] [Attack] Failed/Ignored from Subcidal targeting ai (valid/alive target?)
-[2026-09-03T08:33:04.232Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:33:04.232Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:33:04.233Z] [Attack] Failed/Ignored from Subcidal targeting ai (valid/alive target?)
-[2026-09-03T08:33:04.233Z] [Attack] Failed/Ignored from Subcidal targeting ai (valid/alive target?)
-[2026-09-03T08:33:08.063Z] [Twitch] Subcidal: !left
-[2026-09-03T08:33:08.063Z] [Twitch] Subcidal: !left
-[2026-09-03T08:33:08.064Z] [Nudge] Subcidal nudged left
-[2026-09-03T08:33:08.064Z] [Nudge] Subcidal nudged left
-[2026-09-03T08:33:28.140Z] [Slime Attack] Slime hit Subcidal for -3 HP (94/100)
-[2026-09-03T08:33:28.140Z] [Slime Attack] Slime hit Subcidal for -3 HP (94/100)
-[2026-09-03T08:34:04.525Z] [Twitch] Subcidal: !attack
-[2026-09-03T08:34:04.525Z] [Twitch] Subcidal: !attack
-[2026-09-03T08:34:04.525Z] [Attack] Subcidal attacked slime/mob target (nearest)
-[2026-09-03T08:34:04.525Z] [Attack] Subcidal attacked slime/mob target (nearest)
-[2026-09-03T08:34:09.486Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:34:09.486Z] [Twitch] Subcidal: !attack ai
-[2026-09-03T08:34:09.487Z] [Cooldown] Subcidal attack on cooldown
-[2026-09-03T08:34:09.487Z] [Cooldown] Subcidal attack on cooldown
-[2026-09-03T08:34:44.406Z] [Slime Attack] Slime hit Subcidal for -2 HP (92/100)
-[2026-09-03T08:34:44.406Z] [Slime Attack] Slime hit Subcidal for -2 HP (92/100)
-[2026-09-03T08:35:23.848Z] [Respawn] AI has respawned out of GHOST mode!
-[2026-09-03T08:35:23.848Z] [Respawn] AI has respawned out of GHOST mode!
+[2026-09-03T08:43:18.508Z] Sprite Walker server running at http://localhost:3847
+[2026-09-03T08:43:18.508Z] Listening to Twitch channel: #subcidal
+[2026-09-03T08:43:18.508Z] Max sprites: 50
+[2026-09-03T08:43:18.508Z] Cooldowns: wave=4000ms, attack=5000ms
+[2026-09-03T08:43:18.508Z] Sprite Walker server running at http://localhost:3847
+[2026-09-03T08:43:18.508Z] Listening to Twitch channel: #subcidal
+[2026-09-03T08:43:18.508Z] Max sprites: 50
+[2026-09-03T08:43:18.508Z] Cooldowns: wave=4000ms, attack=5000ms
+[2026-09-03T08:44:33.301Z] [Twitch] Subcidal: !join
+[2026-09-03T08:44:33.301Z] [Twitch] Subcidal: !join
+[2026-09-03T08:44:33.302Z] [Join] Subcidal joined with Minecraft skin: Subcidal
+[2026-09-03T08:44:33.302Z] [Join] Subcidal joined with Minecraft skin: Subcidal
+[2026-09-03T08:44:36.884Z] [Twitch] Subcidal: !ai
+[2026-09-03T08:44:36.884Z] [Twitch] Subcidal: !ai
+[2026-09-03T08:44:36.884Z] [AI Spawn] AI character spawned with Steve skin
+[2026-09-03T08:44:36.884Z] [AI Spawn] AI character spawned with Steve skin
+[2026-09-03T08:44:55.802Z] OBS Overlay connected via WebSocket
+[2026-09-03T08:44:55.802Z] OBS Overlay connected via WebSocket
+[2026-09-03T08:45:05.419Z] [Twitch] Subcidal: !attack ai
+[2026-09-03T08:45:05.419Z] [Twitch] Subcidal: !attack ai
+[2026-09-03T08:45:05.419Z] [Attack] Subcidal initiated attack on AI
+[2026-09-03T08:45:05.419Z] [Attack] Subcidal initiated attack on AI
+[2026-09-03T08:45:05.758Z] [Attack Impact] Subcidal hit AI (-25 HP -> 75/100)
+[2026-09-03T08:45:05.758Z] [Attack Impact] Subcidal hit AI (-25 HP -> 75/100)
+[2026-09-03T08:45:09.576Z] [Twitch] Subcidal: !slime
+[2026-09-03T08:45:09.576Z] [Twitch] Subcidal: !slime
+[2026-09-03T08:45:09.576Z] [Slime] Manual slime spawn requested by Subcidal
+[2026-09-03T08:45:09.576Z] [Slime] Manual slime spawn requested by Subcidal
+[2026-09-03T08:45:40.456Z] [Slime Attack] Slime hit Subcidal for -3 HP (97/100)
+[2026-09-03T08:45:40.456Z] [Slime Attack] Slime hit Subcidal for -3 HP (97/100)
+[2026-09-03T08:46:34.757Z] [Slime Attack] Slime hit AI for -3 HP (72/100)
+[2026-09-03T08:46:34.757Z] [Slime Attack] Slime hit AI for -3 HP (72/100)
