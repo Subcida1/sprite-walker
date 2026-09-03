@@ -1018,7 +1018,7 @@ class SlimeMob {
         this.hitEffectTimer = 0;
         this.exited = false;
         this.baseSpeed = this.speed;
-        this.speed = this.baseSpeed * (0.7 + Math.random() * 0.6);
+        this.speed = this.baseSpeed * (0.4 + Math.random() * 1.8);
         // Smooth hop phase initialized randomly to avoid frame-1 jitter
         this.hopPhase = Math.random() * Math.PI * 2;
         // New slimes from splits start moving almost immediately (10-40 frames = 0.17-0.67s)
@@ -1031,6 +1031,17 @@ class SlimeMob {
     update() {
         this.groundY = canvas.height - 25;
         // No boundary clamping: slimes wrap seamlessly across screen edges like player sprites
+
+        // Anti-bunching / Separation steering — push apart from other nearby slimes
+        for (const other of slimeMobs) {
+            if (other === this) continue;
+            const sepDist = this.wrappedDist(other.x, this.x);
+            if (sepDist < 60 && sepDist > 0) {
+                const pushDir = Math.sign(this.wrappedDiff(this.x, other.x));
+                this.x += pushDir * (60 - sepDist) * 0.04;
+                this.x = this.wrapX(this.x);
+            }
+        }
 
         if (this.hitEffectTimer > 0) this.hitEffectTimer--;
 
@@ -1111,7 +1122,7 @@ class SlimeMob {
             if (Math.abs(dx) > chaseThresh) {
                 this.isInChase = true;
                 // Per-hop speed fluctuation for unique movement pacing
-                if (Math.random() < 0.35) this.speed = this.baseSpeed * (0.7 + Math.random() * 0.6);
+                if (Math.random() < 0.35) this.speed = this.baseSpeed * (0.4 + Math.random() * 1.8);
                 const moveStep = Math.sign(dx) * (this.speed * 1.1);
                 this.x += moveStep;
                 this.x = this.wrapX(this.x);
@@ -1163,7 +1174,7 @@ class SlimeMob {
                 this.stateTimer--;
             } else {
                 // Fluctuate speed for next hop cycle
-                this.speed = this.baseSpeed * (0.7 + Math.random() * 0.6);
+                this.speed = this.baseSpeed * (0.4 + Math.random() * 1.8);
                 const exitChance = this.tier === 'big' ? 0.15 : 0.1;
                 if (Math.random() < exitChance) {
                     const exitLeft = Math.random() > 0.5;
