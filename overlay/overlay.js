@@ -1027,7 +1027,15 @@ class SlimeMob {
 
     update() {
         this.groundY = canvas.height - 25;
-        // Clean non-physical movement: slimes pass through players and each other freely with zero collision/pushing.
+        // Silky-smooth slime-to-slime soft dispersion (prevents clumping, zero player interaction)
+        for (const other of slimeMobs) {
+            if (other === this) continue;
+            const dist = Math.abs(other.x - this.x);
+            if (dist < 55 && dist > 0) {
+                const glideDir = Math.sign(this.x - other.x);
+                this.x += glideDir * 0.35;
+            }
+        }
 
         if (this.hitEffectTimer > 0) this.hitEffectTimer--;
 
@@ -1101,7 +1109,8 @@ class SlimeMob {
             // Chase player (hysteresis band prevents chase/reach flicker)
             const dx = this.targetSprite.x - this.x;
             this.facingRight = dx > 0;
-            const baseReach = 8.0; // tight physical touch range matching player attacks
+            // Standoff attack range (40px): slimes close in but never overlap or push players.
+            const baseReach = 40.0;
             // Use hysteresis: once in chase, keep chasing until within 60% of reach
             const chaseThresh = this.isInChase ? baseReach * 0.6 : baseReach;
 
@@ -1376,7 +1385,9 @@ class SlimeMob {
 let slimeSpawnTimer = 0;
 function spawnSlimeFromEdge() {
     const fromLeft = Math.random() > 0.5;
-    const startX = fromLeft ? -80 : canvas.width + 80;
+    // Add small random offset so multiple slimes don't spawn at exact same offscreen coordinate
+    const offsetX = (Math.random() - 0.5) * 30;
+    const startX = (fromLeft ? -80 : canvas.width + 80) + offsetX;
     const targetX = Math.random() * (canvas.width - 240) + 120;
     const slime = new SlimeMob(startX, canvas.height - 25, 'big');
     slime.targetX = targetX;
@@ -1384,6 +1395,8 @@ function spawnSlimeFromEdge() {
     slime.totalDist = Math.abs(targetX - startX);
     slime.hopCount = Math.max(2, Math.round(slime.totalDist / 70));
     slime.state = 'entering';
+    // Stagger initial movement slightly
+    slime.stateTimer = Math.floor(Math.random() * 20);
     slimeMobs.push(slime);
     console.log(`[Slime] Big slime spawned offscreen at x=${startX}, hopping to x=${targetX}`);
 }
