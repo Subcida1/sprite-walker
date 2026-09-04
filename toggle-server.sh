@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Toggle script for Sprite Walker overlay server
+# Toggle script that launches server in a new terminal window with live logs
 # Usage: ./toggle-server.sh
 
 set -euo pipefail
@@ -9,7 +9,6 @@ PID_FILE="${PROJECT_DIR}/server.pid"
 
 cd "${PROJECT_DIR}"
 
-# Check if server is currently running
 if [[ -f "${PID_FILE}" ]] && kill -0 "$(cat "${PID_FILE}")" 2>/dev/null; then
     PID="$(cat "${PID_FILE}")"
     echo "Stopping Sprite Walker server (PID: ${PID})..."
@@ -23,17 +22,37 @@ else
         rm -f "${PID_FILE}"
         echo "Server stopped."
     else
-        echo "Starting Sprite Walker server in foreground (Press Ctrl+C to stop)..."
-        echo "--------------------------------------------------------"
-        # Run in foreground so logs stream directly to your terminal
-        node server/index.js &
-        SERVER_PID=$!
-        echo ${SERVER_PID} > "${PID_FILE}"
+        echo "Starting Sprite Walker server in a new terminal window..."
         
-        # Trap Ctrl+C to clean up PID file when user exits
-        trap "kill ${SERVER_PID} 2>/dev/null; rm -f '${PID_FILE}'; exit 0" INT TERM
-        
-        wait ${SERVER_PID} || true
-        rm -f "${PID_FILE}"
+        # Detect available terminal emulator on KDE / Kubuntu / Linux
+        TERMINAL_EMULATOR=""
+        if command -v konsole &>/dev/null; then
+            TERMINAL_EMULATOR="konsole"
+        elif command -v gnome-terminal &>/dev/null; then
+            TERMINAL_EMULATOR="gnome-terminal"
+        elif command -v xterm &>/dev/null; then
+            TERMINAL_EMULATOR="xterm"
+        fi
+
+        if [[ -n "${TERMINAL_EMULATOR}" ]]; then
+            if [[ "${TERMINAL_EMULATOR}" == "konsole" ]]; then
+                konsole --noclose -e bash -c "cd '${PROJECT_DIR}' && npm start" &
+            elif [[ "${TERMINAL_EMULATOR}" == "gnome-terminal" ]]; then
+                gnome-terminal -- bash -c "cd '${PROJECT_DIR}' && npm start; exec bash" &
+            elif [[ "${TERMINAL_EMULATOR}" == "xterm" ]]; then
+                xterm -hold -e "cd '${PROJECT_DIR}' && npm start" &
+            fi
+            
+            # Give server a moment to spin up and grab PID
+            sleep 1
+            pgrep -f "node server/index.js" > "${PID_FILE}" || true
+            echo "Server launched in new terminal window!"
+        else
+            # Fallback if no graphical terminal found
+            echo "No graphical terminal found, starting in background with tail -f..."
+            nohup npm start > server.log 2>&1 &
+            echo $! > "${PID_FILE}"
+            tail -f server.log
+        fi
     fi
 fi
