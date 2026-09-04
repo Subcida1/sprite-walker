@@ -280,6 +280,10 @@ class Sprite {
         // Smooth squash/stretch values (decoupled from instantaneous height)
         this.currentSquashX = 1;
         this.currentSquashY = 1;
+
+        // HP Regeneration state
+        this.lastDamageTime = Date.now();
+        this.lastHealTime = Date.now();
     }
 
     update() {
@@ -320,6 +324,25 @@ class Sprite {
             }
             if (this.hitEffectTimer > 0) this.hitEffectTimer--;
             return;
+        }
+
+        // HP Regeneration: after 60s of no damage, heal +1 HP every 30s until full
+        if (!this.isGhost && this.health < this.maxHealth) {
+            const now = Date.now();
+            const timeSinceDamage = now - this.lastDamageTime;
+            if (timeSinceDamage >= 60000) {
+                const timeSinceLastHeal = now - this.lastHealTime;
+                if (timeSinceLastHeal >= 30000) {
+                    this.health = Math.min(this.maxHealth, this.health + 1);
+                    this.pendingHealth = this.health;
+                    this.lastHealTime = now;
+                    console.log(`[HP Regen] ${this.username} regenerated 1 HP (${this.health}/${this.maxHealth})`);
+                }
+            }
+        } else {
+            // At full health or ghosted — keep timers fresh so regen restarts from scratch on next damage
+            this.lastDamageTime = Date.now();
+            this.lastHealTime = Date.now();
         }
 
         // WoW Classic Ghost: completely smooth floating glide with zero jumping/bouncing
@@ -630,6 +653,10 @@ class Sprite {
 
         this.hitEffectTimer = 18; // double flash window (~0.3s)
         
+        // Damage resets both HP regen timers so healing restarts from scratch
+        this.lastDamageTime = Date.now();
+        this.lastHealTime = Date.now();
+
         // Apply pending health drop and ghost state right at the moment of impact/hurt!
         this.health = this.pendingHealth;
         this.maxHealth = this.pendingMaxHealth;
@@ -680,6 +707,10 @@ class Sprite {
 
     setHealth(health, maxHealth) {
         // Defer health update until hurt() fires so the health bar only drops when the hit lands
+        if (health < this.health) {
+            this.lastDamageTime = Date.now();
+            this.lastHealTime = Date.now();
+        }
         this.pendingHealth = health;
         this.pendingMaxHealth = maxHealth;
     }
