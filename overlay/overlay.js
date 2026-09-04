@@ -1800,15 +1800,20 @@ class ZombieMob {
 // Ghast Fireball projectile
 const ghastFireballs = [];
 class GhastFireball {
-    constructor(x, y) {
+    constructor(x, y, vx = 0, vy = 2.5) {
         this.x = x;
         this.y = y;
-        this.vy = 2.5;
+        this.vx = vx;
+        this.vy = vy;
         this.size = 14;
         this.exited = false;
     }
     update() {
+        this.x += this.vx;
         this.y += this.vy;
+        if (this.x < 0) this.x += canvas.width;
+        if (this.x > canvas.width) this.x -= canvas.width;
+
         const groundY = canvas.height - 25;
         if (this.y >= groundY) {
             this.exited = true;
@@ -1890,7 +1895,37 @@ class GhastMob {
             this.fireChargeTimer--;
             if (this.fireChargeTimer === 0) {
                 this.mouthOpen = false;
-                ghastFireballs.push(new GhastFireball(this.x, this.y + this.size / 2));
+
+                // Find nearest player within ~350px wrapped distance to aim at
+                let nearestPlayer = null;
+                let minDist = Infinity;
+                for (const [_, sprite] of sprites) {
+                    if (sprite.isGhost) continue;
+                    let diff = sprite.x - this.x;
+                    if (diff > canvas.width / 2) diff -= canvas.width;
+                    if (diff < -canvas.width / 2) diff += canvas.width;
+                    const dist = Math.abs(diff);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        nearestPlayer = { sprite, diff };
+                    }
+                }
+
+                let aimVx = 0;
+                let aimVy = 2.5;
+                if (nearestPlayer && Math.abs(nearestPlayer.diff) < 350) {
+                    // Natural imperfection/spread (+/- 30px offset so it doesn't track like a heat-seeking missile)
+                    const inaccuracy = (Math.random() - 0.5) * 60;
+                    const targetXOffset = nearestPlayer.diff + inaccuracy;
+                    const fallDist = (canvas.height - 25) - this.y;
+                    const timeToGround = fallDist / aimVy;
+                    aimVx = targetXOffset / timeToGround;
+                    aimVx = Math.max(-2.2, Math.min(2.2, aimVx));
+                } else {
+                    aimVx = this.vx * 0.8;
+                }
+
+                ghastFireballs.push(new GhastFireball(this.x, this.y + this.size / 2, aimVx, aimVy));
             }
         }
     }
