@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # Toggle script that launches server in a new terminal window with live logs
-# Usage: ./toggle-server.sh
+# Usage: ./toggle-server.sh (works even when symlinked from Desktop)
 
 set -euo pipefail
 
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Resolve true script directory even if invoked via symlink from Desktop
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+PROJECT_DIR="$(cd "$(dirname "${SCRIPT_PATH}")" && pwd)"
 PID_FILE="${PROJECT_DIR}/server.pid"
 
 cd "${PROJECT_DIR}"
