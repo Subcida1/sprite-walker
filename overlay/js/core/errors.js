@@ -1,14 +1,14 @@
-export function safeUpdate(entity, name) {
+export function safeUpdate(fn, name) {
     try {
-        entity.update();
+        fn();
     } catch (err) {
         console.error(`[Error Boundary] Failed to update ${name}:`, err);
     }
 }
 
-export function safeDraw(entity, ctx, name) {
+export function safeDraw(fn, name) {
     try {
-        entity.draw(ctx);
+        fn();
     } catch (err) {
         console.error(`[Error Boundary] Failed to draw ${name}:`, err);
     }
