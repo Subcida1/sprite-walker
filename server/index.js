@@ -206,6 +206,37 @@ wss.on('connection', (ws) => {
             }, RESPAWN_TIME_MS);
           }
         }
+      } else if (msg.type === 'PHANTOM_ATTACK') {
+        const targetUser = (msg.target || '').toLowerCase();
+        const damage = msg.damage || 25; // 4-shot kill
+        if (activeSprites.has(targetUser) && !activeSprites.get(targetUser).isGhost) {
+          const targetSprite = activeSprites.get(targetUser);
+          targetSprite.health = Math.max(0, targetSprite.health - damage);
+          
+          broadcast({ type: 'SPRITE_DAMAGED', user: targetSprite.displayName, health: targetSprite.health, maxHealth: targetSprite.maxHealth });
+          console.log(`[Phantom Attack] Phantom dive-bombed ${targetSprite.displayName} for -${damage} HP (${targetSprite.health}/${targetSprite.maxHealth})`);
+
+          if (targetSprite.health === 0 && !targetSprite.isGhost) {
+            targetSprite.isGhost = true;
+            targetSprite.killStreak = 0;
+            if (targetSprite.isEnhanced) {
+              targetSprite.isEnhanced = false;
+              broadcast({ type: 'SPRITE_ENHANCED', user: targetSprite.displayName, isEnhanced: false });
+            }
+            broadcast({ type: 'SPRITE_GHOST', user: targetSprite.displayName });
+            console.log(`[Ghost] ${targetSprite.displayName} was killed by a Phantom and entered GHOST mode!`);
+
+            setTimeout(() => {
+              if (activeSprites.has(targetUser)) {
+                const revived = activeSprites.get(targetUser);
+                revived.health = MAX_HEALTH;
+                revived.isGhost = false;
+                broadcast({ type: 'SPRITE_RESPAWN', user: revived.displayName, health: revived.health, maxHealth: revived.maxHealth });
+                console.log(`[Respawn] ${revived.displayName} respawned out of GHOST mode!`);
+              }
+            }, RESPAWN_TIME_MS);
+          }
+        }
       } else if (msg.type === 'CREEPER_EXPLOSION') {
         const targetUser = (msg.target || '').toLowerCase();
         const damage = msg.damage || 75;
@@ -470,6 +501,10 @@ client.on('message', (channel, tags, message, self) => {
     case 'GHAST_SPAWN':
       broadcast({ type: 'GHAST_SPAWN' });
       console.log(`[Ghast] Manual ghast spawn requested by ${displayName}`);
+      break;
+    case 'PHANTOM_SPAWN':
+      broadcast({ type: 'PHANTOM_SPAWN' });
+      console.log(`[Phantom] Manual phantom spawn requested by ${displayName}`);
       break;
 
     case 'LEAVE':

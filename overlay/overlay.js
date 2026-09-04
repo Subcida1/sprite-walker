@@ -1830,7 +1830,7 @@ class GhastFireball {
             if (diff < -canvas.width / 2) diff += canvas.width;
             if (Math.abs(diff) < 28 && Math.abs(sprite.y - this.y) < 38) {
                 this.exited = true;
-                const damage = 120; // One-shot / heavy damage
+                const damage = 50; // 2-shot kill (MAX_HEALTH=100)
                 if (wsInstance && wsInstance.readyState === WebSocket.OPEN) {
                     wsInstance.send(JSON.stringify({ type: 'GHAST_FIREBALL_HIT', target: sprite.username, damage }));
                 }
@@ -2013,6 +2013,184 @@ function spawnGhastFromEdge() {
     console.log(`[Ghast] Single-pass bombing run ghast spawned at x=${startX} (fromLeft=${fromLeft})`);
 }
 
+// Level 3 — Phantoms: blue-gray aerial dive-bombers that swoop down at players
+const phantomMobs = [];
+
+class PhantomMob {
+    constructor(x, y) {
+        this.x = x;
+        this.groundY = y;
+        this.y = y;
+        this.size = 36; // Wingspan ~36px
+        this.health = 4;
+        this.maxHealth = 4;
+        this.vx = Math.random() > 0.5 ? 0.5 : -0.5;
+        this.vy = 0;
+        this.wingPhase = Math.random() * Math.PI * 2;
+        this.state = 'circling'; // circling, diving, climbing
+        this.diveCooldown = Math.floor(Math.random() * 120) + 60;
+        this.diveTarget = null;
+        this.lifeTimer = Math.floor(Math.random() * 600) + 900; // 15-25s lifespan (900-1500 frames)
+        this.exited = false;
+        this.hitEffectTimer = 0;
+    }
+
+    update() {
+        this.wingPhase += 0.25;
+        this.lifeTimer--;
+        if (this.lifeTimer <= 0) {
+            this.exited = true;
+        }
+
+        if (this.hitEffectTimer > 0) this.hitEffectTimer--;
+
+        if (this.state === 'circling') {
+            // Gentle circling at Level 3 height
+            this.x += this.vx;
+            this.y = this.groundY + Math.sin(this.wingPhase * 0.4) * 12;
+
+            // Screen wrap
+            if (this.x < -60) this.x = canvas.width + 60;
+            if (this.x > canvas.width + 60) this.x = -60;
+
+            // Pick a target and dive
+            if (this.diveCooldown > 0) {
+                this.diveCooldown--;
+            } else {
+                // Find nearest player
+                let nearestPlayer = null;
+                let minDist = Infinity;
+                for (const [_, sprite] of sprites) {
+                    if (sprite.isGhost) continue;
+                    let diff = sprite.x - this.x;
+                    if (diff > canvas.width / 2) diff -= canvas.width;
+                    if (diff < -canvas.width / 2) diff += canvas.width;
+                    const dist = Math.abs(diff);
+                    if (dist < minDist && dist < 500) {
+                        minDist = dist;
+                        nearestPlayer = { sprite, diff };
+                    }
+                }
+                if (nearestPlayer) {
+                    this.state = 'diving';
+                    this.diveTarget = { x: nearestPlayer.sprite.x, y: nearestPlayer.sprite.y };
+                    this.vx = Math.sign(nearestPlayer.diff) * 4.0; // Fast horizontal dive
+                    this.vy = 5.0; // Fast vertical dive
+                    this.diveCooldown = Math.floor(Math.random() * 180) + 120;
+                }
+            }
+        } else if (this.state === 'diving') {
+            // Dive straight down toward target
+            this.x += this.vx;
+            this.y += this.vy;
+
+            // Check if we reached player height (ground level + some buffer)
+            if (this.y >= canvas.height - 50) {
+                // At ground level - deal damage and start climbing back up
+                for (const [_, sprite] of sprites) {
+                    if (sprite.isGhost) continue;
+                    let diff = sprite.x - this.x;
+                    if (diff > canvas.width / 2) diff -= canvas.width;
+                    if (diff < -canvas.width / 2) diff += canvas.width;
+                    if (Math.abs(diff) < 30 && Math.abs(sprite.y - this.y) < 40) {
+                        const damage = 25; // Light damage (4 hits to kill)
+                        if (wsInstance && wsInstance.readyState === WebSocket.OPEN) {
+                            wsInstance.send(JSON.stringify({ type: 'PHANTOM_ATTACK', target: sprite.username, damage }));
+                        }
+                        sprite.hurt();
+                        // Purple/blue dive impact particles
+                        for (let i = 0; i < 6; i++) {
+                            bloodParticles.push(new BloodParticle(sprite.x, sprite.y, '#8a2be2'));
+                        }
+                        break;
+                    }
+                }
+                this.state = 'climbing';
+                this.vy = -3.5; // Climb back up
+                this.vx *= 0.5; // Slow horizontal
+            }
+        } else if (this.state === 'climbing') {
+            // Climb back up to circling height
+            this.x += this.vx;
+            this.y += this.vy;
+            if (this.y <= this.groundY + 20) {
+                this.y = this.groundY;
+                this.state = 'circling';
+                this.vx = Math.random() > 0.5 ? 0.5 : -0.5;
+                this.vy = 0;
+            }
+        }
+    }
+
+    hurt(amount) {
+        this.health -= amount;
+        this.hitEffectTimer = 12;
+        for (let i = 0; i < 5; i++) {
+            bloodParticles.push(new BloodParticle(this.x, this.y, '#8a2be2'));
+        }
+        return this.health <= 0;
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        const flashing = this.hitEffectTimer > 0 && Math.floor(this.hitEffectTimer / 3) % 2 === 0;
+
+        // Body (flat blue-gray phantom shape)
+        const s = this.size;
+        ctx.fillStyle = flashing ? '#a0a0c0' : '#6b6b9e';
+        ctx.strokeStyle = '#3a3a5e';
+        ctx.lineWidth = 2;
+
+        // Wing flap animation
+        const wingAngle = Math.sin(this.wingPhase) * 0.8; // Wing tilt
+
+        // Left wing
+        ctx.beginPath();
+        ctx.moveTo(-2, -2);
+        ctx.lineTo(-s * 0.6, -s * 0.3 * Math.cos(wingAngle));
+        ctx.lineTo(-s * 0.4, s * 0.1);
+        ctx.lineTo(-2, 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Right wing
+        ctx.beginPath();
+        ctx.moveTo(2, -2);
+        ctx.lineTo(s * 0.6, -s * 0.3 * Math.cos(-wingAngle));
+        ctx.lineTo(s * 0.4, s * 0.1);
+        ctx.lineTo(2, 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Body (narrow vertical)
+        ctx.fillRect(-4, -6, 8, 14);
+
+        // Glowing teal/green eyes
+        ctx.fillStyle = flashing ? '#ffffff' : '#00ffcc';
+        ctx.fillRect(-6, -4, 4, 4);
+        ctx.fillRect(2, -4, 4, 4);
+
+        ctx.restore();
+    }
+}
+
+function spawnPhantomFromEdge() {
+    if (phantomMobs.length >= 3) return; // Max 3 phantoms at once
+    const fromLeft = Math.random() > 0.5;
+    const startX = fromLeft ? -80 : canvas.width + 80;
+    const count = Math.floor(Math.random() * 3) + 1; // 1-3 phantoms
+    for (let i = 0; i < count; i++) {
+        const x = startX + (Math.random() - 0.5) * 60;
+        const phantom = new PhantomMob(x, canvas.height - 190); // Level 3 height
+        phantomMobs.push(phantom);
+    }
+    console.log(`[Phantom] ${count} phantom(s) spawned at x=${startX}`);
+}
+
 function spawnZombieFromEdge() {
     if (slimeMobs.length + creeperMobs.length + zombieMobs.length >= 8) return;
     const fromLeft = Math.random() > 0.5;
@@ -2053,7 +2231,19 @@ canvas.addEventListener('click', (e) => {
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
-    // Hit-test ghasts first (Level 3 - highest mob)
+    // Hit-test phantoms first (Level 3 aerial - highest mobs)
+    for (let i = phantomMobs.length - 1; i >= 0; i--) {
+        const p = phantomMobs[i];
+        const half = p.size / 2;
+        if (mx >= p.x - half && mx <= p.x + half && my >= p.y - p.size && my <= p.y) {
+            const killed = p.hurt(2);
+            if (killed) {
+                phantomMobs.splice(i, 1);
+            }
+            return;
+        }
+    }
+    // Hit-test ghasts (Level 3 - high mob)
     for (let i = ghastMobs.length - 1; i >= 0; i--) {
         const g = ghastMobs[i];
         const half = g.size / 2;
@@ -2238,6 +2428,9 @@ function handleCommand(cmd) {
     } else if (type === 'GHAST_SPAWN') {
         spawnGhastFromEdge();
         console.log(`[Ghast] Manual !ghast spawn triggered`);
+    } else if (type === 'PHANTOM_SPAWN') {
+        spawnPhantomFromEdge();
+        console.log(`[Phantom] Manual !phantom spawn triggered`);
     } else if (type === 'SLIME_ATTACK_REQUEST') {
         // Player attacked a slime — find nearest slime to attacker's x position
         const attackerKey = user.toLowerCase();
@@ -2392,9 +2585,19 @@ function animate() {
         }
     }
 
-    // Auto-spawn ghast occasionally if none exist
-    if (ghastMobs.length === 0 && Math.random() < 0.0006) {
-        spawnGhastFromEdge();
+    // Phantom Mobs (Level 3 aerial dive-bombers) — update + draw + cleanup
+    for (let i = phantomMobs.length - 1; i >= 0; i--) {
+        const p = phantomMobs[i];
+        p.update();
+        p.draw(ctx);
+        if (p.health <= 0 || p.exited) {
+            phantomMobs.splice(i, 1);
+        }
+    }
+
+    // Auto-spawn phantoms occasionally if none exist
+    if (phantomMobs.length === 0 && Math.random() < 0.0005) {
+        spawnPhantomFromEdge();
     }
 
     // Ghost wispy wisp particles (update + draw, remove dead ones)
