@@ -2,29 +2,45 @@
 > sprite-walker@1.0.0 start
 > node server/index.js
 
-[2026-09-04T07:30:00.914Z] Sprite Walker server running at http://localhost:3847
-[2026-09-04T07:30:00.914Z] Listening to Twitch channel: #subcidal
-[2026-09-04T07:30:00.914Z] Max sprites: 50
-[2026-09-04T07:30:00.914Z] Cooldowns: wave=4000ms, attack=5000ms
-[2026-09-04T07:30:00.914Z] Sprite Walker server running at http://localhost:3847
-[2026-09-04T07:30:00.914Z] Listening to Twitch channel: #subcidal
-[2026-09-04T07:30:00.914Z] Max sprites: 50
-[2026-09-04T07:30:00.914Z] Cooldowns: wave=4000ms, attack=5000ms
-[2026-09-04T07:30:02.194Z] OBS Overlay connected via WebSocket
-[2026-09-04T07:30:02.194Z] OBS Overlay connected via WebSocket
-[2026-09-04T07:30:08.316Z] OBS Overlay disconnected
-[2026-09-04T07:30:08.316Z] OBS Overlay disconnected
-[2026-09-04T07:30:08.462Z] OBS Overlay connected via WebSocket
-[2026-09-04T07:30:08.462Z] OBS Overlay connected via WebSocket
-[2026-09-04T07:30:16.770Z] [Twitch] Subcidal: !join
-[2026-09-04T07:30:16.770Z] [Twitch] Subcidal: !join
-[2026-09-04T07:30:16.770Z] [Join] Subcidal joined with Minecraft skin: Subcidal
-[2026-09-04T07:30:16.770Z] [Join] Subcidal joined with Minecraft skin: Subcidal
-[2026-09-04T07:30:17.613Z] [Twitch] Subcidal: !ai
-[2026-09-04T07:30:17.613Z] [Twitch] Subcidal: !ai
-[2026-09-04T07:30:17.613Z] [AI Spawn] AI character spawned with Steve skin
-[2026-09-04T07:30:17.613Z] [AI Spawn] AI character spawned with Steve skin
-[2026-09-04T07:30:20.548Z] [Twitch] Subcidal: !ghast
-[2026-09-04T07:30:20.548Z] [Twitch] Subcidal: !ghast
-[2026-09-04T07:30:20.548Z] [Ghast] Manual ghast spawn requested by Subcidal
-[2026-09-04T07:30:20.548Z] [Ghast] Manual ghast spawn requested by Subcidal
+[2026-09-04T07:35:11.056Z] Sprite Walker server running at http://localhost:3847
+[2026-09-04T07:35:11.057Z] Listening to Twitch channel: #subcidal
+[2026-09-04T07:35:11.057Z] Max sprites: 50
+[2026-09-04T07:35:11.057Z] Cooldowns: wave=4000ms, attack=5000ms
+[2026-09-04T07:35:11.056Z] Sprite Walker server running at http://localhost:3847
+[2026-09-04T07:35:11.057Z] Listening to Twitch channel: #subcidal
+[2026-09-04T07:35:11.057Z] Max sprites: 50
+[2026-09-04T07:35:11.057Z] Cooldowns: wave=4000ms, attack=5000ms
+[2026-09-04T07:35:17.711Z] OBS Overlay connected via WebSocket
+[2026-09-04T07:35:17.711Z] OBS Overlay connected via WebSocket
+[2026-09-04T07:35:20.940Z] [Twitch] Subcidal: !join
+[2026-09-04T07:35:20.940Z] [Twitch] Subcidal: !join
+[2026-09-04T07:35:20.940Z] [Join] Subcidal joined with Minecraft skin: Subcidal
+[2026-09-04T07:35:20.940Z] [Join] Subcidal joined with Minecraft skin: Subcidal
+[2026-09-04T07:35:22.111Z] [Twitch] Subcidal: !ai
+[2026-09-04T07:35:22.111Z] [Twitch] Subcidal: !ai
+[2026-09-04T07:35:22.111Z] [AI Spawn] AI character spawned with Steve skin
+[2026-09-04T07:35:22.111Z] [AI Spawn] AI character spawned with Steve skin
+[2026-09-04T07:35:24.935Z] [Twitch] Subcidal: !ghast
+[2026-09-04T07:35:24.935Z] [Twitch] Subcidal: !ghast
+[2026-09-04T07:35:24.936Z] [Ghast] Manual ghast spawn requested by Subcidal
+[2026-09-04T07:35:24.936Z] [Ghast] Manual ghast spawn requested by Subcidal
+[2026-09-04T07:39:20.913Z] [Twitch] Mp4Sim: ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt
+[2026-09-04T07:39:20.913Z] [Twitch] Mp4Sim: ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt
+[2026-09-04T07:39:26.553Z] [Twitch] Mp4Sim: wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+[2026-09-04T07:39:26.553Z] [Twitch] Mp4Sim: wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+[2026-09-04T07:39:28.767Z] [Twitch] Subcidal: adasd
+[2026-09-04T07:39:28.767Z] [Twitch] Subcidal: adasd
+[2026-09-04T07:39:29.080Z] [Twitch] Subcidal: sdf
+[2026-09-04T07:39:29.080Z] [Twitch] Subcidal: sdf
+[2026-09-04T07:39:29.284Z] [Twitch] Subcidal: fsd
+[2026-09-04T07:39:29.284Z] [Twitch] Subcidal: fsd
+[2026-09-04T07:39:29.590Z] [Twitch] Subcidal: sdf
+[2026-09-04T07:39:29.590Z] [Twitch] Subcidal: sdf
+[2026-09-04T07:39:29.710Z] [Twitch] Subcidal: fsd
+[2026-09-04T07:39:29.710Z] [Twitch] Subcidal: fsd
+[2026-09-04T07:39:29.977Z] [Twitch] Mp4Sim: wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+[2026-09-04T07:39:29.977Z] [Twitch] Mp4Sim: wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+[2026-09-04T07:39:30.074Z] [Twitch] Subcidal: sdf
+[2026-09-04T07:39:30.074Z] [Twitch] Subcidal: sdf
+[2026-09-04T07:39:31.356Z] [Twitch] Subcidal: aasd
+[2026-09-04T07:39:31.356Z] [Twitch] Subcidal: aasd

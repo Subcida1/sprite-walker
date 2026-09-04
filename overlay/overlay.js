@@ -1797,7 +1797,7 @@ class ZombieMob {
     }
 }
 
-// Ghast Fireball projectile
+// Ghast Fireball projectile (organic multi-layer ball of flame)
 const ghastFireballs = [];
 class GhastFireball {
     constructor(x, y, vx = 0, vy = 2.5) {
@@ -1805,10 +1805,12 @@ class GhastFireball {
         this.y = y;
         this.vx = vx;
         this.vy = vy;
-        this.size = 14;
+        this.size = 16;
         this.exited = false;
+        this.animPhase = Math.random() * Math.PI * 2;
     }
     update() {
+        this.animPhase += 0.3;
         this.x += this.vx;
         this.y += this.vy;
         if (this.x < 0) this.x += canvas.width;
@@ -1817,7 +1819,7 @@ class GhastFireball {
         const groundY = canvas.height - 25;
         if (this.y >= groundY) {
             this.exited = true;
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < 10; i++) {
                 bloodParticles.push(new BloodParticle(this.x, groundY, '#ff4500'));
             }
         }
@@ -1826,14 +1828,15 @@ class GhastFireball {
             let diff = sprite.x - this.x;
             if (diff > canvas.width / 2) diff -= canvas.width;
             if (diff < -canvas.width / 2) diff += canvas.width;
-            if (Math.abs(diff) < 25 && Math.abs(sprite.y - this.y) < 35) {
+            if (Math.abs(diff) < 28 && Math.abs(sprite.y - this.y) < 38) {
                 this.exited = true;
+                const damage = 120; // One-shot / heavy damage
                 if (wsInstance && wsInstance.readyState === WebSocket.OPEN) {
-                    wsInstance.send(JSON.stringify({ type: 'GHAST_FIREBALL_HIT', target: sprite.username, damage: 35 }));
+                    wsInstance.send(JSON.stringify({ type: 'GHAST_FIREBALL_HIT', target: sprite.username, damage }));
                 }
                 sprite.hurt();
-                for (let i = 0; i < 6; i++) {
-                    bloodParticles.push(new BloodParticle(sprite.x, sprite.y, '#ff4500'));
+                for (let i = 0; i < 8; i++) {
+                    bloodParticles.push(new BloodParticle(sprite.x, sprite.y, '#ff3300'));
                 }
                 break;
             }
@@ -1842,28 +1845,44 @@ class GhastFireball {
     draw(ctx) {
         ctx.save();
         ctx.translate(this.x, this.y);
+
+        // Multi-layered organic flame visual
+        const flamePulse = Math.sin(this.animPhase) * 3;
+        
+        // Outer red/orange flame glow
         ctx.fillStyle = '#ff3300';
-        ctx.strokeStyle = '#ffff00';
-        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+        ctx.arc(0, 0, this.size + flamePulse, 0, Math.PI * 2);
         ctx.fill();
-        ctx.stroke();
+
+        // Inner bright orange-yellow flame core
+        ctx.fillStyle = '#ff9900';
+        ctx.beginPath();
+        ctx.arc(0, 0, this.size * 0.7 + flamePulse * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Center white-yellow fiery hot center
+        ctx.fillStyle = '#ffff66';
+        ctx.beginPath();
+        ctx.arc(0, 0, this.size * 0.35, 0, Math.PI * 2);
+        ctx.fill();
+
         ctx.restore();
     }
 }
 
-// Level 3 — Ghast: huge floating Minecraft ghast doing a continuous bombing run
+// Level 3 — Ghast: huge floating Minecraft ghast doing a single bombing run across the screen
 class GhastMob {
-    constructor(x, y) {
+    constructor(x, y, fromLeft) {
         this.x = x;
         this.groundY = y;
         this.y = y;
-        this.size = 85; // Massive boss ghast size proportionate to game players
+        this.size = 85;
         this.health = 8;
         this.maxHealth = 8;
-        this.vx = Math.random() > 0.5 ? 0.7 : -0.7; // bombing run flight direction
-        this.fireCooldown = Math.floor(Math.random() * 150) + 120;
+        this.fromLeft = fromLeft;
+        this.vx = fromLeft ? 0.8 : -0.8; // Fly across once in one direction
+        this.fireCooldown = Math.floor(Math.random() * 80) + 40;
         this.swayPhase = Math.random() * Math.PI * 2;
         this.hitEffectTimer = 0;
         this.exited = false;
@@ -1877,18 +1896,21 @@ class GhastMob {
 
         if (this.hitEffectTimer > 0) this.hitEffectTimer--;
 
-        // Continuous bombing run movement with screen wrapping
+        // Fly across screen once and despawn when offscreen
         this.x += this.vx;
-        if (this.x < -100) this.x = canvas.width + 100;
-        if (this.x > canvas.width + 100) this.x = -100;
+        if (this.fromLeft && this.x > canvas.width + 120) {
+            this.exited = true;
+        } else if (!this.fromLeft && this.x < -120) {
+            this.exited = true;
+        }
 
-        // Shoot fireballs every 4-5 seconds (240-300 frames)
+        // Shoot fireballs during pass
         if (this.fireCooldown > 0) {
             this.fireCooldown--;
         } else {
             this.mouthOpen = true;
-            this.fireChargeTimer = 45; // 0.75s telegraph charge
-            this.fireCooldown = Math.floor(Math.random() * 60) + 240; // 4-5s
+            this.fireChargeTimer = 40; // 0.65s charge
+            this.fireCooldown = Math.floor(Math.random() * 60) + 180;
         }
 
         if (this.fireChargeTimer > 0) {
@@ -1896,7 +1918,7 @@ class GhastMob {
             if (this.fireChargeTimer === 0) {
                 this.mouthOpen = false;
 
-                // Find nearest player within ~350px wrapped distance to aim at
+                // Find nearest player to aim at
                 let nearestPlayer = null;
                 let minDist = Infinity;
                 for (const [_, sprite] of sprites) {
@@ -1913,9 +1935,8 @@ class GhastMob {
 
                 let aimVx = 0;
                 let aimVy = 2.5;
-                if (nearestPlayer && Math.abs(nearestPlayer.diff) < 350) {
-                    // Natural imperfection/spread (+/- 30px offset so it doesn't track like a heat-seeking missile)
-                    const inaccuracy = (Math.random() - 0.5) * 60;
+                if (nearestPlayer && Math.abs(nearestPlayer.diff) < 400) {
+                    const inaccuracy = (Math.random() - 0.5) * 50;
                     const targetXOffset = nearestPlayer.diff + inaccuracy;
                     const fallDist = (canvas.height - 25) - this.y;
                     const timeToGround = fallDist / aimVy;
@@ -1946,14 +1967,12 @@ class GhastMob {
 
         const flashing = this.hitEffectTimer > 0 && Math.floor(this.hitEffectTimer / 3) % 2 === 0;
 
-        // Body (huge white Minecraft ghast cube)
         ctx.fillStyle = this.fireChargeTimer > 0 ? '#ffcccc' : (flashing ? '#ffffff' : '#f8f8fa');
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 3;
         ctx.fillRect(-s / 2, -s / 2, s, s);
         ctx.strokeRect(-s / 2, -s / 2, s, s);
 
-        // Face
         ctx.fillStyle = this.fireChargeTimer > 0 ? '#ff0000' : '#111111';
         // Eyes
         ctx.fillRect(-s * 0.25, -s * 0.15, s * 0.18, s * 0.22);
@@ -1989,9 +2008,9 @@ function spawnGhastFromEdge() {
     if (ghastMobs.length >= 1) return; // Only 1 bombing run ghast at a time
     const fromLeft = Math.random() > 0.5;
     const startX = fromLeft ? -100 : canvas.width + 100;
-    const ghast = new GhastMob(startX, canvas.height - 180);
+    const ghast = new GhastMob(startX, canvas.height - 180, fromLeft);
     ghastMobs.push(ghast);
-    console.log(`[Ghast] Bombing run ghast spawned at x=${startX}`);
+    console.log(`[Ghast] Single-pass bombing run ghast spawned at x=${startX} (fromLeft=${fromLeft})`);
 }
 
 function spawnZombieFromEdge() {
