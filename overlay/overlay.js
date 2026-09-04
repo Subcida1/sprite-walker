@@ -802,10 +802,13 @@ class Sprite {
         this.drawSpriteInstance(ctx, this.x, this.y);
 
         // Seamless edge roll: if near screen edges, draw wrapped duplicate so it rolls smoothly across screen boundary
-        if (this.x < size) {
-            this.drawSpriteInstance(ctx, this.x + canvas.width, this.y);
-        } else if (this.x > canvas.width - size) {
-            this.drawSpriteInstance(ctx, this.x - canvas.width, this.y);
+        // Skip while entering or exiting — sprite is deliberately off-canvas, not actually wrapping
+        if (this.state !== 'entering' && this.state !== 'exiting') {
+            if (this.x < size) {
+                this.drawSpriteInstance(ctx, this.x + canvas.width, this.y);
+            } else if (this.x > canvas.width - size) {
+                this.drawSpriteInstance(ctx, this.x - canvas.width, this.y);
+            }
         }
     }
 
