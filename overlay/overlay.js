@@ -1558,12 +1558,23 @@ class CreeperMob {
             if (this.fuseTimer <= 0) {
                 // EXPLODE!
                 creeperExplosions.push(new CreeperExplosion(this.x, this.y));
-                // Damage players within blast radius
+                // Damage players within blast radius (100px) with falloff
+                const blastRadius = 100;
+                const maxDamage = 85; // Nearly one-shot at point blank
+                const minDamage = 30; // Still hurts at edge
                 for (const [_, sprite] of sprites) {
                     let diff = sprite.x - this.x;
                     if (diff > canvas.width / 2) diff -= canvas.width;
                     if (diff < -canvas.width / 2) diff += canvas.width;
-                    if (Math.abs(diff) < 70) {
+                    const dist = Math.abs(diff);
+                    if (dist < blastRadius) {
+                        // Linear falloff from maxDamage at center to minDamage at edge
+                        const damage = Math.round(maxDamage - (dist / blastRadius) * (maxDamage - minDamage));
+                        // Send damage request to server so it applies HP + ghosting
+                        if (wsInstance && wsInstance.readyState === WebSocket.OPEN) {
+                            wsInstance.send(JSON.stringify({ type: 'CREEPER_EXPLOSION', target: sprite.username, damage }));
+                        }
+                        // Local visual hit reaction
                         sprite.hurt();
                     }
                 }

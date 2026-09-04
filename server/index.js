@@ -175,6 +175,37 @@ wss.on('connection', (ws) => {
             }, RESPAWN_TIME_MS);
           }
         }
+      } else if (msg.type === 'CREEPER_EXPLOSION') {
+        const targetUser = (msg.target || '').toLowerCase();
+        const damage = msg.damage || 75;
+        if (activeSprites.has(targetUser) && !activeSprites.get(targetUser).isGhost) {
+          const targetSprite = activeSprites.get(targetUser);
+          targetSprite.health = Math.max(0, targetSprite.health - damage);
+          
+          broadcast({ type: 'SPRITE_DAMAGED', user: targetSprite.displayName, health: targetSprite.health, maxHealth: targetSprite.maxHealth });
+          console.log(`[Creeper Explosion] Creeper blew up ${targetSprite.displayName} for -${damage} HP (${targetSprite.health}/${targetSprite.maxHealth})`);
+
+          if (targetSprite.health === 0 && !targetSprite.isGhost) {
+            targetSprite.isGhost = true;
+            targetSprite.killStreak = 0;
+            if (targetSprite.isEnhanced) {
+              targetSprite.isEnhanced = false;
+              broadcast({ type: 'SPRITE_ENHANCED', user: targetSprite.displayName, isEnhanced: false });
+            }
+            broadcast({ type: 'SPRITE_GHOST', user: targetSprite.displayName });
+            console.log(`[Ghost] ${targetSprite.displayName} was blown up by a Creeper and entered GHOST mode!`);
+
+            setTimeout(() => {
+              if (activeSprites.has(targetUser)) {
+                const revived = activeSprites.get(targetUser);
+                revived.health = MAX_HEALTH;
+                revived.isGhost = false;
+                broadcast({ type: 'SPRITE_RESPAWN', user: revived.displayName, health: revived.health, maxHealth: revived.maxHealth });
+                console.log(`[Respawn] ${revived.displayName} respawned out of GHOST mode!`);
+              }
+            }, RESPAWN_TIME_MS);
+          }
+        }
       } else if (msg.type === 'ATTACK_IMPACT') {
         const attackerKey = (msg.user || '').toLowerCase();
         const targetKey = (msg.target || '').toLowerCase();
