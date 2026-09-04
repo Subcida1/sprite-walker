@@ -1660,9 +1660,184 @@ function spawnCreeperFromEdge() {
     console.log(`[Creeper] Spawned offscreen at x=${startX}, walking to x=${targetX}`);
 }
 
+// ---------------------------------------------------------------------------
+// Zombie NPC Mobs (client-side ambient AI) - Shamble and melee attack players
+// ---------------------------------------------------------------------------
+
+const zombieMobs = [];
+
+class ZombieMob {
+    constructor(x, y) {
+        this.x = x;
+        this.groundY = y;
+        this.y = y;
+        this.size = 28; // hit test width
+        this.health = 3;
+        this.maxHealth = 3;
+        this.damage = 30;
+        this.speed = 0.8; // slower, shambling
+
+        this.state = 'entering'; // entering, wandering, exiting
+        this.stateTimer = Math.floor(Math.random() * 90) + 30;
+        this.startX = x;
+        this.targetX = x;
+        this.facingRight = Math.random() > 0.5;
+        this.hitEffectTimer = 0;
+        this.exited = false;
+        this.shamblePhase = 0;
+        this.attackCooldown = 0;
+    }
+
+    update() {
+        this.groundY = canvas.height - 25;
+
+        // Separation steering
+        for (const other of [...slimeMobs, ...creeperMobs, ...zombieMobs]) {
+            if (other === this) continue;
+            const dist = Math.abs(other.x - this.x);
+            if (dist < 45 && dist > 0) {
+                const glideDir = Math.sign(this.x - other.x);
+                this.x += glideDir * 0.3;
+            }
+        }
+
+        if (this.hitEffectTimer > 0) this.hitEffectTimer--;
+        if (this.attackCooldown > 0) this.attackCooldown--;
+
+        if (this.state === 'entering') {
+            const dx = this.targetX - this.x;
+            this.facingRight = dx > 0;
+            if (Math.abs(dx) > 1.5) {
+                this.x += Math.sign(dx) * Math.min(this.speed, Math.abs(dx));
+                this.shamblePhase += 0.1;
+            } else {
+                this.x = this.targetX;
+                this.state = 'wandering';
+                this.stateTimer = Math.floor(Math.random() * 120) + 60;
+            }
+        } else if (this.state === 'wandering') {
+            // Check proximity to any player sprite across screen seam using wrappedDist
+            let nearestPlayer = null;
+            let minPlayerDist = Infinity;
+            for (const [_, sprite] of sprites) {
+                let diff = sprite.x - this.x;
+                if (diff > canvas.width / 2) diff -= canvas.width;
+                if (diff < -canvas.width / 2) diff += canvas.width;
+                const dist = Math.abs(diff);
+                if (dist < minPlayerDist) {
+                    minPlayerDist = dist;
+                    nearestPlayer = sprite;
+                }
+            }
+
+            if (nearestPlayer && minPlayerDist <= 45 && this.attackCooldown === 0) {
+                // Attack player!
+                this.attackCooldown = 120; // 2s cooldown between attacks
+                if (wsInstance && wsInstance.readyState === WebSocket.OPEN) {
+                    wsInstance.send(JSON.stringify({ type: 'ZOMBIE_ATTACK', target: nearestPlayer.username, damage: 30 }));
+                }
+                nearestPlayer.hurt();
+                console.log(`[Zombie] Attacked player ${nearestPlayer.username} for 30 damage!`);
+            } else {
+                if (this.stateTimer > 0) {
+                    this.stateTimer--;
+                } else {
+                    this.targetX = Math.random() * (canvas.width - 160) + 80;
+                    this.stateTimer = Math.floor(Math.random() * 180) + 90;
+                }
+                const dx = this.targetX - this.x;
+                if (Math.abs(dx) > 1.5) {
+                    this.facingRight = dx > 0;
+                    this.x += Math.sign(dx) * Math.min(this.speed * 0.9, Math.abs(dx));
+                    this.shamblePhase += 0.1;
+                }
+            }
+        } else if (this.state === 'exiting') {
+            const dx = this.targetX - this.x;
+            this.facingRight = dx > 0;
+            this.x += Math.sign(dx) * this.speed;
+            this.shamblePhase += 0.1;
+            if (this.x < -60 || this.x > canvas.width + 60) {
+                this.exited = true;
+            }
+        }
+    }
+
+    hurt(amount) {
+        this.health -= amount;
+        this.hitEffectTimer = 14;
+        return this.health <= 0;
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        const totalHeight = 58;
+        const headSize = 26;
+        const bodyWidth = 22;
+        const bodyHeight = 22;
+        const feetHeight = 12;
+
+        ctx.fillStyle = '#3c8527'; // Zombie green skin tone
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2.5;
+
+        // Shamble bobbing offset
+        const isMoving = this.state === 'entering' || this.state === 'wandering';
+        const bob = isMoving ? Math.sin(this.shamblePhase) * 3 : 0;
+
+        // 1. Feet (dark pants/boots)
+        ctx.fillStyle = '#1e3f66';
+        ctx.fillRect(-12, -feetHeight, 10, feetHeight);
+        ctx.strokeRect(-12, -feetHeight, 10, feetHeight);
+        ctx.fillRect(2, -feetHeight, 10, feetHeight);
+        ctx.strokeRect(2, -feetHeight, 10, feetHeight);
+
+        // 2. Torso (Cyan shirt)
+        ctx.fillStyle = '#007a7a';
+        ctx.fillRect(-bodyWidth / 2, -feetHeight - bodyHeight + bob, bodyWidth, bodyHeight);
+        ctx.strokeRect(-bodyWidth / 2, -feetHeight - bodyHeight + bob, bodyWidth, bodyHeight);
+
+        // 3. Outstretched Arms (Zombie pose)
+        const dir = this.facingRight ? 1 : -1;
+        ctx.fillStyle = '#3c8527';
+        ctx.fillRect(dir > 0 ? bodyWidth / 2 : -bodyWidth / 2 - 14, -feetHeight - bodyHeight + 4 + bob, 14, 8);
+        ctx.strokeRect(dir > 0 ? bodyWidth / 2 : -bodyWidth / 2 - 14, -feetHeight - bodyHeight + 4 + bob, 14, 8);
+
+        // 4. Head
+        const headY = -totalHeight + bob;
+        ctx.fillStyle = '#3c8527';
+        ctx.fillRect(-headSize / 2, headY, headSize, headSize);
+        ctx.strokeRect(-headSize / 2, headY, headSize, headSize);
+
+        // Face
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(dir * 5 - 3, headY + 8, 5, 5); // Eyes
+        ctx.fillRect(dir * -3 - 3, headY + 8, 5, 5);
+        ctx.fillRect(-2, headY + 17, 4, 4); // Mouth
+
+        ctx.restore();
+    }
+}
+
+function spawnZombieFromEdge() {
+    if (slimeMobs.length + creeperMobs.length + zombieMobs.length >= 8) return;
+    const fromLeft = Math.random() > 0.5;
+    const startX = fromLeft ? -80 : canvas.width + 80;
+    const targetX = Math.random() * (canvas.width - 240) + 120;
+    const zombie = new ZombieMob(startX, canvas.height - 25);
+    zombie.targetX = targetX;
+    zombie.startX = startX;
+    zombie.state = 'entering';
+    zombieMobs.push(zombie);
+    console.log(`[Zombie] Spawned offscreen at x=${startX}, walking to x=${targetX}`);
+}
+
 // Spawn a big slime, starting visibly on screen
 let slimeSpawnTimer = 0;
 let creeperSpawnTimer = 0;
+let zombieSpawnTimer = 0;
 function spawnSlimeFromEdge() {
     const fromLeft = Math.random() > 0.5;
     // Add small random offset so multiple slimes don't spawn at exact same offscreen coordinate
@@ -1681,12 +1856,24 @@ function spawnSlimeFromEdge() {
     console.log(`[Slime] Big slime spawned offscreen at x=${startX}, hopping to x=${targetX}`);
 }
 
-// Click/tap a slime or creeper to damage it (players can defend themselves)
+// Click/tap a slime, creeper, or zombie to damage it (players can defend themselves)
 canvas.addEventListener('click', (e) => {
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
-    // Hit-test creepers first
+    // Hit-test zombies first
+    for (let i = zombieMobs.length - 1; i >= 0; i--) {
+        const z = zombieMobs[i];
+        const half = z.size / 2;
+        if (mx >= z.x - half && mx <= z.x + half && my >= z.y - 58 && my <= z.y) {
+            const killed = z.hurt(2);
+            if (killed) {
+                zombieMobs.splice(i, 1);
+            }
+            return;
+        }
+    }
+    // Hit-test creepers
     for (let i = creeperMobs.length - 1; i >= 0; i--) {
         const c = creeperMobs[i];
         const half = c.size / 2;
@@ -1841,6 +2028,9 @@ function handleCommand(cmd) {
     } else if (type === 'CREEPER_SPAWN') {
         spawnCreeperFromEdge();
         console.log(`[Creeper] Manual !creeper spawn triggered`);
+    } else if (type === 'ZOMBIE_SPAWN') {
+        spawnZombieFromEdge();
+        console.log(`[Zombie] Manual !zombie spawn triggered`);
     } else if (type === 'SLIME_ATTACK_REQUEST') {
         // Player attacked a slime — find nearest slime to attacker's x position
         const attackerKey = user.toLowerCase();
@@ -1951,6 +2141,26 @@ function animate() {
         exp.draw(ctx);
         if (exp.isDead()) {
             creeperExplosions.splice(i, 1);
+        }
+    }
+
+    // Zombie Mobs — update, draw, and periodic spawn
+    if (!window.nextZombieSpawnIn) {
+        window.nextZombieSpawnIn = Math.floor(Math.random() * 18000) + 48000; // 13-20 min @ 60fps
+    }
+    if (++zombieSpawnTimer >= window.nextZombieSpawnIn) {
+        zombieSpawnTimer = 0;
+        window.nextZombieSpawnIn = Math.floor(Math.random() * 18000) + 48000;
+        if (slimeMobs.length + creeperMobs.length + zombieMobs.length < 8) {
+            spawnZombieFromEdge();
+        }
+    }
+    for (let i = zombieMobs.length - 1; i >= 0; i--) {
+        const z = zombieMobs[i];
+        z.update();
+        z.draw(ctx);
+        if (z.health <= 0 || z.exited) {
+            zombieMobs.splice(i, 1);
         }
     }
 
