@@ -1827,6 +1827,9 @@ function handleCommand(cmd) {
     } else if (type === 'SLIME_SPAWN') {
         spawnSlimeFromEdge();
         console.log(`[Slime] Manual !slime spawn triggered`);
+    } else if (type === 'CREEPER_SPAWN') {
+        spawnCreeperFromEdge();
+        console.log(`[Creeper] Manual !creeper spawn triggered`);
     } else if (type === 'SLIME_ATTACK_REQUEST') {
         // Player attacked a slime — find nearest slime to attacker's x position
         const attackerKey = user.toLowerCase();

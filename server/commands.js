@@ -33,6 +33,8 @@ function parseCommand(message, username) {
       return { type: 'AI_SPAWN', user: username.toLowerCase() };
     case 'slime':
       return { type: 'SLIME_SPAWN', user: username.toLowerCase() };
+    case 'creeper':
+      return { type: 'CREEPER_SPAWN', user: username.toLowerCase() };
     default:
       return null;
   }

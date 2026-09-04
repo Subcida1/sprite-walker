@@ -366,6 +366,10 @@ client.on('message', (channel, tags, message, self) => {
       broadcast({ type: 'SLIME_SPAWN' });
       console.log(`[Slime] Manual slime spawn requested by ${displayName}`);
       break;
+    case 'CREEPER_SPAWN':
+      broadcast({ type: 'CREEPER_SPAWN' });
+      console.log(`[Creeper] Manual creeper spawn requested by ${displayName}`);
+      break;
 
     case 'LEAVE':
       if (activeSprites.has(username)) {
