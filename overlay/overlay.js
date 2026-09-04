@@ -1881,8 +1881,8 @@ class GhastMob {
         this.health = 8;
         this.maxHealth = 8;
         this.fromLeft = fromLeft;
-        this.vx = fromLeft ? 0.8 : -0.8; // Fly across once in one direction
-        this.fireCooldown = Math.floor(Math.random() * 80) + 40;
+        this.vx = fromLeft ? 2.0 : -2.0; // Brisk single-pass flight across screen
+        this.fireCooldown = Math.floor(Math.random() * 40) + 20;
         this.swayPhase = Math.random() * Math.PI * 2;
         this.hitEffectTimer = 0;
         this.exited = false;
