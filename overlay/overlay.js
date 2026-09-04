@@ -2618,6 +2618,20 @@ function animate() {
         }
     }
 
+    // Ghast Auto-Spawn Timer (~45 min intervals, one at a time)
+    if (!window.nextGhastSpawnIn) {
+        window.nextGhastSpawnIn = 45 * 60 * 60; // 45 minutes @ 60fps = 162,000 frames
+        window.ghastSpawnTimer = 0;
+    }
+    if (++window.ghastSpawnTimer >= window.nextGhastSpawnIn) {
+        window.ghastSpawnTimer = 0;
+        window.nextGhastSpawnIn = Math.floor(Math.random() * 18000) + 162000; // ~45 min ± 5 min
+        if (ghastMobs.length === 0) {
+            spawnGhastFromEdge();
+            console.log(`[Ghast] Auto-spawned on 45-min timer!`);
+        }
+    }
+
     // Ghast Fireballs — update + draw + cleanup
     for (let i = ghastFireballs.length - 1; i >= 0; i--) {
         const fb = ghastFireballs[i];
