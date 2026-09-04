@@ -1635,6 +1635,7 @@ function spawnCreeperFromEdge() {
 // ---------------------------------------------------------------------------
 
 const zombieMobs = [];
+const ghastMobs = [];
 
 class ZombieMob {
     constructor(x, y) {
@@ -1737,6 +1738,10 @@ class ZombieMob {
     hurt(amount) {
         this.health -= amount;
         this.hitEffectTimer = 14;
+        // Spawn blood particles (Minecraft zombie blood is dark red)
+        for (let i = 0; i < 6; i++) {
+            bloodParticles.push(new BloodParticle(this.x, this.y - 30, '#8b0000'));
+        }
         return this.health <= 0;
     }
 
@@ -1792,6 +1797,158 @@ class ZombieMob {
     }
 }
 
+// Level 3 — Ghast: a floating Minecraft ghast, high above the ghosts (Level 2) and ground (Level 1)
+// Character heads are ~26px wide; the ghast body is ~25% bigger (~32-34px core cube) plus tentacles.
+class GhastMob {
+    constructor(x, y) {
+        this.x = x;
+        this.groundY = y; // Level 3 float height (canvas.height - 210)
+        this.y = y;
+        this.size = 34; // 25% bigger than ~26px character head
+        this.health = 5;
+        this.maxHealth = 5;
+        this.state = 'entering';
+        this.stateTimer = Math.floor(Math.random() * 60) + 30;
+        this.targetX = x;
+        this.startX = x;
+        this.totalDist = 0;
+        this.facingRight = Math.random() > 0.5;
+        this.hitEffectTimer = 0;
+        this.exited = false;
+        this.swayPhase = Math.random() * Math.PI * 2; // random initial bobbing phase
+        this.attackCooldown = 0;
+        this.mouthOpen = false;
+    }
+
+    update() {
+        // Gentle floating bobbing
+        this.swayPhase += 0.02;
+        const bob = Math.sin(this.swayPhase) * 4;
+        this.y = this.groundY + bob;
+
+        if (this.hitEffectTimer > 0) this.hitEffectTimer--;
+        if (this.attackCooldown > 0) this.attackCooldown--;
+
+        if (this.state === 'entering') {
+            // Glide in from edge
+            let diff = this.targetX - this.x;
+            if (diff > canvas.width / 2) diff -= canvas.width;
+            if (diff < -canvas.width / 2) diff += canvas.width;
+            this.facingRight = diff > 0;
+
+            if (Math.abs(diff) > 2) {
+                this.x += Math.sign(diff) * Math.min(1.4, Math.abs(diff));
+                if (this.x < 0) this.x += canvas.width;
+                if (this.x > canvas.width) this.x -= canvas.width;
+            } else {
+                this.x = this.targetX;
+                this.state = 'drifting';
+                this.stateTimer = Math.floor(Math.random() * 180) + 60;
+            }
+        } else if (this.state === 'drifting') {
+            // Drift back and forth near the top with pauses, wrapping at edges
+            if (this.stateTimer > 0) {
+                this.stateTimer--;
+            } else {
+                this.targetX = Math.random() * (canvas.width - 100) + 50;
+                this.stateTimer = Math.floor(Math.random() * 240) + 120;
+            }
+            let diff = this.targetX - this.x;
+            if (diff > canvas.width / 2) diff -= canvas.width;
+            if (diff < -canvas.width / 2) diff += canvas.width;
+            this.facingRight = diff > 0;
+
+            if (Math.abs(diff) > 2) {
+                this.x += Math.sign(diff) * Math.min(1.0, Math.abs(diff));
+                if (this.x < 0) this.x += canvas.width;
+                if (this.x > canvas.width) this.x -= canvas.width;
+            }
+
+            // Occasionally open/close mouth (cosmetic)
+            if (Math.floor(this.swayPhase * 5) % 30 === 0) {
+                this.mouthOpen = !this.mouthOpen;
+            }
+        } else if (this.state === 'exiting') {
+            let diff = this.targetX - this.x;
+            if (diff > canvas.width / 2) diff -= canvas.width;
+            if (diff < -canvas.width / 2) diff += canvas.width;
+            if (Math.abs(diff) > 2) {
+                this.x += Math.sign(diff) * Math.min(1.6, Math.abs(diff));
+                if (this.x < 0) this.x += canvas.width;
+                if (this.x > canvas.width) this.x -= canvas.width;
+            } else {
+                this.exited = true;
+            }
+        }
+    }
+
+    hurt(amount) {
+        this.health -= amount;
+        this.hitEffectTimer = 14;
+        // Ghast takes damage: spawn white/blue sparkle particles
+        for (let i = 0; i < 6; i++) {
+            bloodParticles.push(new BloodParticle(this.x, this.y - 10, '#ffffff'));
+        }
+        return this.health <= 0;
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        const s = this.size;
+        const bob = Math.sin(this.swayPhase) * 4;
+
+        // Hit flash
+        const flashing = this.hitEffectTimer > 0 && Math.floor(this.hitEffectTimer / 3) % 2 === 0;
+
+        // Body (white Minecraft ghast cube)
+        ctx.fillStyle = flashing ? '#ffffff' : '#f8f8fa';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        ctx.fillRect(-s / 2, -s / 2, s, s);
+        ctx.strokeRect(-s / 2, -s / 2, s, s);
+
+        // Face (dark hollow eyes + mouth)
+        ctx.fillStyle = '#111111';
+        // Eyes
+        ctx.fillRect(-7 - 2, -6, 7, 9);
+        ctx.fillRect(2, -6, 7, 9);
+        // Mouth (top of mouth line)
+        ctx.fillRect(-8, 6, 16, 4);
+        if (this.mouthOpen) {
+            ctx.fillRect(-6, 10, 12, 8);
+        }
+
+        // Trailing tentacles (8 hanging wiggly tendrils)
+        ctx.strokeStyle = '#e6e6ea';
+        ctx.lineWidth = 1.5;
+        for (let i = 0; i < 8; i++) {
+            const xOff = -s / 2 + (i + 0.5) * (s / 8);
+            const wig = Math.sin(this.swayPhase * 1.5 + i * 0.7) * 2;
+            const len = 8 + Math.abs(Math.sin(this.swayPhase * 0.8 + i)) * 6;
+            ctx.beginPath();
+            ctx.moveTo(xOff, s / 2);
+            ctx.quadraticCurveTo(xOff + wig * 0.5, s / 2 + len * 0.5, xOff + wig, s / 2 + len);
+            ctx.stroke();
+        }
+
+        ctx.restore();
+    }
+}
+
+function spawnGhastFromEdge() {
+    if (ghastMobs.length >= 3) return;
+    const fromLeft = Math.random() > 0.5;
+    const startX = fromLeft ? -80 : canvas.width + 80;
+    const targetX = Math.random() * (canvas.width - 240) + 120;
+    const ghast = new GhastMob(startX, canvas.height - 210); // Level 3: high above ghosts
+    ghast.targetX = targetX;
+    ghast.startX = startX;
+    ghast.state = 'entering';
+    ghastMobs.push(ghast);
+    console.log(`[Ghast] Spawned Level 3 ghast at x=${startX}, drifting to x=${targetX}`);
+}
+
 function spawnZombieFromEdge() {
     if (slimeMobs.length + creeperMobs.length + zombieMobs.length >= 8) return;
     const fromLeft = Math.random() > 0.5;
@@ -1832,7 +1989,19 @@ canvas.addEventListener('click', (e) => {
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
-    // Hit-test zombies first
+    // Hit-test ghasts first (Level 3 - highest mob)
+    for (let i = ghastMobs.length - 1; i >= 0; i--) {
+        const g = ghastMobs[i];
+        const half = g.size / 2;
+        if (mx >= g.x - half && mx <= g.x + half && my >= g.y - g.size && my <= g.y) {
+            const killed = g.hurt(2);
+            if (killed) {
+                ghastMobs.splice(i, 1);
+            }
+            return;
+        }
+    }
+    // Hit-test zombies
     for (let i = zombieMobs.length - 1; i >= 0; i--) {
         const z = zombieMobs[i];
         const half = z.size / 2;
@@ -2002,6 +2171,9 @@ function handleCommand(cmd) {
     } else if (type === 'ZOMBIE_SPAWN') {
         spawnZombieFromEdge();
         console.log(`[Zombie] Manual !zombie spawn triggered`);
+    } else if (type === 'GHAST_SPAWN') {
+        spawnGhastFromEdge();
+        console.log(`[Ghast] Manual !ghast spawn triggered`);
     } else if (type === 'SLIME_ATTACK_REQUEST') {
         // Player attacked a slime — find nearest slime to attacker's x position
         const attackerKey = user.toLowerCase();
@@ -2133,6 +2305,21 @@ function animate() {
         if (z.health <= 0 || z.exited) {
             zombieMobs.splice(i, 1);
         }
+    }
+
+    // Ghast Mobs (Level 3 floating) — update + draw + cleanup
+    for (let i = ghastMobs.length - 1; i >= 0; i--) {
+        const g = ghastMobs[i];
+        g.update();
+        g.draw(ctx);
+        if (g.health <= 0 || g.exited) {
+            ghastMobs.splice(i, 1);
+        }
+    }
+
+    // Auto-spawn ghast occasionally if few exist
+    if (Math.random() < 0.0008) { // ~1/1250 frames ≈ every 20s at 60fps
+        spawnGhastFromEdge();
     }
 
     // Ghost wispy wisp particles (update + draw, remove dead ones)

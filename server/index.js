@@ -436,6 +436,10 @@ client.on('message', (channel, tags, message, self) => {
       broadcast({ type: 'ZOMBIE_SPAWN' });
       console.log(`[Zombie] Manual zombie spawn requested by ${displayName}`);
       break;
+    case 'GHAST_SPAWN':
+      broadcast({ type: 'GHAST_SPAWN' });
+      console.log(`[Ghast] Manual ghast spawn requested by ${displayName}`);
+      break;
 
     case 'LEAVE':
       if (activeSprites.has(username)) {

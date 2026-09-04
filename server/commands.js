@@ -37,6 +37,8 @@ function parseCommand(message, username) {
       return { type: 'CREEPER_SPAWN', user: username.toLowerCase() };
     case 'zombie':
       return { type: 'ZOMBIE_SPAWN', user: username.toLowerCase() };
+    case 'ghast':
+      return { type: 'GHAST_SPAWN', user: username.toLowerCase() };
     default:
       return null;
   }
