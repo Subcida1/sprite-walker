@@ -1559,9 +1559,11 @@ class CreeperMob {
             if (this.fuseTimer <= 0) {
                 // EXPLODE!
                 creeperExplosions.push(new CreeperExplosion(this.x, this.y));
-                // Damage players within blast radius (100px) — guaranteed 100+ damage (instant one-shot)
+                // Damage ALL entities within blast radius (100px) — players, slimes, creepers, zombies
                 const blastRadius = 100;
-                const damage = 120; // Always one-shot / instant ghost
+                const damage = 120; // One-shot for players, heavy damage for mobs
+
+                // Damage players (server-synced, respect ghost mode)
                 for (const [_, sprite] of sprites) {
                     if (sprite.isGhost) continue;
                     let diff = sprite.x - this.x;
@@ -1575,6 +1577,37 @@ class CreeperMob {
                         sprite.hurt();
                     }
                 }
+
+                // Damage slimes (local only)
+                for (const slime of slimeMobs) {
+                    let diff = slime.x - this.x;
+                    if (diff > canvas.width / 2) diff -= canvas.width;
+                    if (diff < -canvas.width / 2) diff += canvas.width;
+                    if (Math.abs(diff) < blastRadius) {
+                        slime.hurt(damage);
+                    }
+                }
+
+                // Damage other creepers (local only)
+                for (const creeper of creeperMobs) {
+                    let diff = creeper.x - this.x;
+                    if (diff > canvas.width / 2) diff -= canvas.width;
+                    if (diff < -canvas.width / 2) diff += canvas.width;
+                    if (Math.abs(diff) < blastRadius) {
+                        creeper.hurt(damage);
+                    }
+                }
+
+                // Damage zombies (local only)
+                for (const zombie of zombieMobs) {
+                    let diff = zombie.x - this.x;
+                    if (diff > canvas.width / 2) diff -= canvas.width;
+                    if (diff < -canvas.width / 2) diff += canvas.width;
+                    if (Math.abs(diff) < blastRadius) {
+                        zombie.hurt(damage);
+                    }
+                }
+
                 this.exited = true;
             }
         } else if (this.state === 'exiting') {
