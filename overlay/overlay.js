@@ -1797,87 +1797,100 @@ class ZombieMob {
     }
 }
 
-// Level 3 — Ghast: a floating Minecraft ghast, high above the ghosts (Level 2) and ground (Level 1)
-// Character heads are ~26px wide; the ghast body is ~25% bigger (~32-34px core cube) plus tentacles.
+// Ghast Fireball projectile
+const ghastFireballs = [];
+class GhastFireball {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.vy = 2.5;
+        this.size = 14;
+        this.exited = false;
+    }
+    update() {
+        this.y += this.vy;
+        const groundY = canvas.height - 25;
+        if (this.y >= groundY) {
+            this.exited = true;
+            for (let i = 0; i < 8; i++) {
+                bloodParticles.push(new BloodParticle(this.x, groundY, '#ff4500'));
+            }
+        }
+        for (const [_, sprite] of sprites) {
+            if (sprite.isGhost) continue;
+            let diff = sprite.x - this.x;
+            if (diff > canvas.width / 2) diff -= canvas.width;
+            if (diff < -canvas.width / 2) diff += canvas.width;
+            if (Math.abs(diff) < 25 && Math.abs(sprite.y - this.y) < 35) {
+                this.exited = true;
+                if (wsInstance && wsInstance.readyState === WebSocket.OPEN) {
+                    wsInstance.send(JSON.stringify({ type: 'GHAST_FIREBALL_HIT', target: sprite.username, damage: 35 }));
+                }
+                sprite.hurt();
+                for (let i = 0; i < 6; i++) {
+                    bloodParticles.push(new BloodParticle(sprite.x, sprite.y, '#ff4500'));
+                }
+                break;
+            }
+        }
+    }
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.fillStyle = '#ff3300';
+        ctx.strokeStyle = '#ffff00';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+    }
+}
+
+// Level 3 — Ghast: huge floating Minecraft ghast doing a continuous bombing run
 class GhastMob {
     constructor(x, y) {
         this.x = x;
-        this.groundY = y; // Level 3 float height (canvas.height - 210)
+        this.groundY = y;
         this.y = y;
-        this.size = 34; // 25% bigger than ~26px character head
-        this.health = 5;
-        this.maxHealth = 5;
-        this.state = 'entering';
-        this.stateTimer = Math.floor(Math.random() * 60) + 30;
-        this.targetX = x;
-        this.startX = x;
-        this.totalDist = 0;
-        this.facingRight = Math.random() > 0.5;
+        this.size = 85; // Massive boss ghast size proportionate to game players
+        this.health = 8;
+        this.maxHealth = 8;
+        this.vx = Math.random() > 0.5 ? 0.7 : -0.7; // bombing run flight direction
+        this.fireCooldown = Math.floor(Math.random() * 150) + 120;
+        this.swayPhase = Math.random() * Math.PI * 2;
         this.hitEffectTimer = 0;
         this.exited = false;
-        this.swayPhase = Math.random() * Math.PI * 2; // random initial bobbing phase
-        this.attackCooldown = 0;
         this.mouthOpen = false;
+        this.fireChargeTimer = 0;
     }
 
     update() {
-        // Gentle floating bobbing
-        this.swayPhase += 0.02;
-        const bob = Math.sin(this.swayPhase) * 4;
-        this.y = this.groundY + bob;
+        this.swayPhase += 0.025;
+        this.y = this.groundY + Math.sin(this.swayPhase) * 6;
 
         if (this.hitEffectTimer > 0) this.hitEffectTimer--;
-        if (this.attackCooldown > 0) this.attackCooldown--;
 
-        if (this.state === 'entering') {
-            // Glide in from edge
-            let diff = this.targetX - this.x;
-            if (diff > canvas.width / 2) diff -= canvas.width;
-            if (diff < -canvas.width / 2) diff += canvas.width;
-            this.facingRight = diff > 0;
+        // Continuous bombing run movement with screen wrapping
+        this.x += this.vx;
+        if (this.x < -100) this.x = canvas.width + 100;
+        if (this.x > canvas.width + 100) this.x = -100;
 
-            if (Math.abs(diff) > 2) {
-                this.x += Math.sign(diff) * Math.min(1.4, Math.abs(diff));
-                if (this.x < 0) this.x += canvas.width;
-                if (this.x > canvas.width) this.x -= canvas.width;
-            } else {
-                this.x = this.targetX;
-                this.state = 'drifting';
-                this.stateTimer = Math.floor(Math.random() * 180) + 60;
-            }
-        } else if (this.state === 'drifting') {
-            // Drift back and forth near the top with pauses, wrapping at edges
-            if (this.stateTimer > 0) {
-                this.stateTimer--;
-            } else {
-                this.targetX = Math.random() * (canvas.width - 100) + 50;
-                this.stateTimer = Math.floor(Math.random() * 240) + 120;
-            }
-            let diff = this.targetX - this.x;
-            if (diff > canvas.width / 2) diff -= canvas.width;
-            if (diff < -canvas.width / 2) diff += canvas.width;
-            this.facingRight = diff > 0;
+        // Shoot fireballs every 4-5 seconds (240-300 frames)
+        if (this.fireCooldown > 0) {
+            this.fireCooldown--;
+        } else {
+            this.mouthOpen = true;
+            this.fireChargeTimer = 45; // 0.75s telegraph charge
+            this.fireCooldown = Math.floor(Math.random() * 60) + 240; // 4-5s
+        }
 
-            if (Math.abs(diff) > 2) {
-                this.x += Math.sign(diff) * Math.min(1.0, Math.abs(diff));
-                if (this.x < 0) this.x += canvas.width;
-                if (this.x > canvas.width) this.x -= canvas.width;
-            }
-
-            // Occasionally open/close mouth (cosmetic)
-            if (Math.floor(this.swayPhase * 5) % 30 === 0) {
-                this.mouthOpen = !this.mouthOpen;
-            }
-        } else if (this.state === 'exiting') {
-            let diff = this.targetX - this.x;
-            if (diff > canvas.width / 2) diff -= canvas.width;
-            if (diff < -canvas.width / 2) diff += canvas.width;
-            if (Math.abs(diff) > 2) {
-                this.x += Math.sign(diff) * Math.min(1.6, Math.abs(diff));
-                if (this.x < 0) this.x += canvas.width;
-                if (this.x > canvas.width) this.x -= canvas.width;
-            } else {
-                this.exited = true;
+        if (this.fireChargeTimer > 0) {
+            this.fireChargeTimer--;
+            if (this.fireChargeTimer === 0) {
+                this.mouthOpen = false;
+                ghastFireballs.push(new GhastFireball(this.x, this.y + this.size / 2));
             }
         }
     }
@@ -1885,9 +1898,8 @@ class GhastMob {
     hurt(amount) {
         this.health -= amount;
         this.hitEffectTimer = 14;
-        // Ghast takes damage: spawn white/blue sparkle particles
         for (let i = 0; i < 6; i++) {
-            bloodParticles.push(new BloodParticle(this.x, this.y - 10, '#ffffff'));
+            bloodParticles.push(new BloodParticle(this.x, this.y, '#ffffff'));
         }
         return this.health <= 0;
     }
@@ -1896,36 +1908,38 @@ class GhastMob {
         ctx.save();
         ctx.translate(this.x, this.y);
         const s = this.size;
-        const bob = Math.sin(this.swayPhase) * 4;
 
-        // Hit flash
         const flashing = this.hitEffectTimer > 0 && Math.floor(this.hitEffectTimer / 3) % 2 === 0;
 
-        // Body (white Minecraft ghast cube)
-        ctx.fillStyle = flashing ? '#ffffff' : '#f8f8fa';
+        // Body (huge white Minecraft ghast cube)
+        ctx.fillStyle = this.fireChargeTimer > 0 ? '#ffcccc' : (flashing ? '#ffffff' : '#f8f8fa');
         ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 3;
         ctx.fillRect(-s / 2, -s / 2, s, s);
         ctx.strokeRect(-s / 2, -s / 2, s, s);
 
-        // Face (dark hollow eyes + mouth)
-        ctx.fillStyle = '#111111';
+        // Face
+        ctx.fillStyle = this.fireChargeTimer > 0 ? '#ff0000' : '#111111';
         // Eyes
-        ctx.fillRect(-7 - 2, -6, 7, 9);
-        ctx.fillRect(2, -6, 7, 9);
-        // Mouth (top of mouth line)
-        ctx.fillRect(-8, 6, 16, 4);
-        if (this.mouthOpen) {
-            ctx.fillRect(-6, 10, 12, 8);
+        ctx.fillRect(-s * 0.25, -s * 0.15, s * 0.18, s * 0.22);
+        ctx.fillRect(s * 0.07, -s * 0.15, s * 0.18, s * 0.22);
+
+        // Mouth
+        if (this.mouthOpen || this.fireChargeTimer > 0) {
+            ctx.fillStyle = '#ff2200';
+            ctx.fillRect(-s * 0.2, s * 0.15, s * 0.4, s * 0.3);
+            ctx.strokeRect(-s * 0.2, s * 0.15, s * 0.4, s * 0.3);
+        } else {
+            ctx.fillRect(-s * 0.2, s * 0.2, s * 0.4, s * 0.1);
         }
 
-        // Trailing tentacles (8 hanging wiggly tendrils)
+        // Trailing tentacles
         ctx.strokeStyle = '#e6e6ea';
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 2.5;
         for (let i = 0; i < 8; i++) {
             const xOff = -s / 2 + (i + 0.5) * (s / 8);
-            const wig = Math.sin(this.swayPhase * 1.5 + i * 0.7) * 2;
-            const len = 8 + Math.abs(Math.sin(this.swayPhase * 0.8 + i)) * 6;
+            const wig = Math.sin(this.swayPhase * 1.5 + i * 0.7) * 5;
+            const len = 16 + Math.abs(Math.sin(this.swayPhase * 0.8 + i)) * 12;
             ctx.beginPath();
             ctx.moveTo(xOff, s / 2);
             ctx.quadraticCurveTo(xOff + wig * 0.5, s / 2 + len * 0.5, xOff + wig, s / 2 + len);
@@ -1937,16 +1951,12 @@ class GhastMob {
 }
 
 function spawnGhastFromEdge() {
-    if (ghastMobs.length >= 3) return;
+    if (ghastMobs.length >= 1) return; // Only 1 bombing run ghast at a time
     const fromLeft = Math.random() > 0.5;
-    const startX = fromLeft ? -80 : canvas.width + 80;
-    const targetX = Math.random() * (canvas.width - 240) + 120;
-    const ghast = new GhastMob(startX, canvas.height - 210); // Level 3: high above ghosts
-    ghast.targetX = targetX;
-    ghast.startX = startX;
-    ghast.state = 'entering';
+    const startX = fromLeft ? -100 : canvas.width + 100;
+    const ghast = new GhastMob(startX, canvas.height - 180);
     ghastMobs.push(ghast);
-    console.log(`[Ghast] Spawned Level 3 ghast at x=${startX}, drifting to x=${targetX}`);
+    console.log(`[Ghast] Bombing run ghast spawned at x=${startX}`);
 }
 
 function spawnZombieFromEdge() {
@@ -2317,8 +2327,19 @@ function animate() {
         }
     }
 
-    // Auto-spawn ghast occasionally if few exist
-    if (Math.random() < 0.0008) { // ~1/1250 frames ≈ every 20s at 60fps
+    // Ghast Fireballs — update + draw + cleanup
+    for (let i = ghastFireballs.length - 1; i >= 0; i--) {
+        const fb = ghastFireballs[i];
+        fb.update();
+        if (!fb.exited) {
+            fb.draw(ctx);
+        } else {
+            ghastFireballs.splice(i, 1);
+        }
+    }
+
+    // Auto-spawn ghast occasionally if none exist
+    if (ghastMobs.length === 0 && Math.random() < 0.0006) {
         spawnGhastFromEdge();
     }
 
