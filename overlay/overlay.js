@@ -2035,6 +2035,11 @@ function spawnGhastFromEdge() {
 }
 
 // Level 3 — Phantoms: blue-gray aerial dive-bombers that swoop down at players
+let phantomCycleFrames = 0;
+let phantomActive = false;
+let phantomActiveFramesLeft = 0;
+const PHANTOM_DORMANT_FRAMES = 10 * 60 * 60; // 10 minutes at 60fps
+const PHANTOM_ACTIVE_FRAMES = 5 * 60 * 60;   // 5 minutes at 60fps
 const phantomMobs = [];
 
 class PhantomMob {
@@ -2452,6 +2457,15 @@ function handleCommand(cmd) {
     } else if (type === 'PHANTOM_SPAWN') {
         spawnPhantomFromEdge();
         console.log(`[Phantom] Manual !phantom spawn triggered`);
+    } else if (type === 'SLEEP') {
+        phantomActive = false;
+        phantomCycleFrames = 0;
+        phantomActiveFramesLeft = 0;
+        for (const p of phantomMobs) {
+            p.exited = true;
+        }
+        phantomMobs.length = 0;
+        console.log(`[Sleep] !sleep command received - Phantoms put to sleep and cycle reset.`);
     } else if (type === 'SLIME_ATTACK_REQUEST') {
         // Player attacked a slime — find nearest slime to attacker's x position
         const attackerKey = user.toLowerCase();
@@ -2606,7 +2620,31 @@ function animate() {
         }
     }
 
-    // Phantom Mobs (Level 3 aerial dive-bombers) — update + draw + cleanup
+    // Phantom Mobs (Level 3 aerial dive-bombers) — cycle manager (10 min dormant, 5 min active) & update
+    if (!phantomActive) {
+        phantomCycleFrames++;
+        if (phantomCycleFrames >= PHANTOM_DORMANT_FRAMES) {
+            phantomCycleFrames = 0;
+            phantomActive = true;
+            phantomActiveFramesLeft = PHANTOM_ACTIVE_FRAMES;
+            spawnPhantomFromEdge();
+            console.log(`[Phantom Cycle] Phantoms arrived! Active for 5 minutes.`);
+        }
+    } else {
+        phantomActiveFramesLeft--;
+        if (phantomMobs.length === 0 && Math.random() < 0.0005) {
+            spawnPhantomFromEdge();
+        }
+        if (phantomActiveFramesLeft <= 0) {
+            phantomActive = false;
+            phantomCycleFrames = 0;
+            for (const p of phantomMobs) {
+                p.exited = true;
+            }
+            console.log(`[Phantom Cycle] Phantoms retreated. Next spawn in 10 minutes.`);
+        }
+    }
+
     for (let i = phantomMobs.length - 1; i >= 0; i--) {
         const p = phantomMobs[i];
         p.update();
@@ -2614,11 +2652,6 @@ function animate() {
         if (p.health <= 0 || p.exited) {
             phantomMobs.splice(i, 1);
         }
-    }
-
-    // Auto-spawn phantoms occasionally if none exist
-    if (phantomMobs.length === 0 && Math.random() < 0.0005) {
-        spawnPhantomFromEdge();
     }
 
     // Ghost wispy wisp particles (update + draw, remove dead ones)

@@ -41,6 +41,8 @@ function parseCommand(message, username) {
       return { type: 'GHAST_SPAWN', user: username.toLowerCase() };
     case 'phantom':
       return { type: 'PHANTOM_SPAWN', user: username.toLowerCase() };
+    case 'sleep':
+      return { type: 'SLEEP', user: username.toLowerCase() };
     default:
       return null;
   }

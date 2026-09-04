@@ -506,6 +506,10 @@ client.on('message', (channel, tags, message, self) => {
       broadcast({ type: 'PHANTOM_SPAWN' });
       console.log(`[Phantom] Manual phantom spawn requested by ${displayName}`);
       break;
+    case 'SLEEP':
+      broadcast({ type: 'SLEEP' });
+      console.log(`[Sleep] !sleep command issued by ${displayName} - Phantoms resting`);
+      break;
 
     case 'LEAVE':
       if (activeSprites.has(username)) {
