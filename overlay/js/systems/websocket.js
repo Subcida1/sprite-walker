@@ -40,51 +40,66 @@ export function connectWS() {
 function handleMessage(data) {
     const { type, user, mcUser, health, maxHealth, isGhost, killStreak, isEnhanced, x, direction } = data;
 
-    if (type === 'SYNC_STATE' && data.sprites) {
+    if ((type === 'SYNC_STATE' || type === 'ROSTER_SYNC') && data.sprites) {
         state.sprites.clear();
-        for (const [uname, sData] of Object.entries(data.sprites)) {
-            const sprite = new Sprite(
-                sData.username,
-                sData.mcUser,
-                sData.health,
-                sData.maxHealth,
-                sData.isGhost,
-                sData.killStreak,
-                sData.isEnhanced
-            );
-            state.sprites.set(uname.toLowerCase(), sprite);
+        const entries = Array.isArray(data.sprites) ? data.sprites : Object.entries(data.sprites);
+        for (const item of entries) {
+            const uname = Array.isArray(item) ? item[0] : (item.username || item.displayName);
+            const sData = Array.isArray(item) ? item[1] : item;
+            if (sData) {
+                const name = sData.displayName || sData.username || uname;
+                if (name) {
+                    const sprite = new Sprite(
+                        name,
+                        sData.mcUser || name,
+                        sData.health ?? 100,
+                        sData.maxHealth ?? 100,
+                        sData.isGhost ?? false,
+                        sData.killStreak ?? 0,
+                        sData.isEnhanced ?? false
+                    );
+                    state.sprites.set(name.toLowerCase(), sprite);
+                }
+            }
         }
+        console.log(`[Client] Roster synced: ${state.sprites.size} sprites loaded`);
     } else if (type === 'SPRITE_SPAWN' || type === 'SPRITE_JOIN') {
-        const key = user.toLowerCase();
-        if (!state.sprites.has(key)) {
-            const sprite = new Sprite(user, mcUser, health, maxHealth, isGhost, killStreak, isEnhanced);
+        if (user) {
+            const key = user.toLowerCase();
+            const sprite = new Sprite(user, mcUser || user, health ?? 100, maxHealth ?? 100, isGhost ?? false, killStreak ?? 0, isEnhanced ?? false);
             state.sprites.set(key, sprite);
-            console.log(`[Client] Sprite spawned for ${user} (MC: ${mcUser})`);
+            console.log(`[Client] Sprite spawned for ${user} (MC: ${mcUser || user})`);
         }
     } else if (type === 'SPRITE_UPDATE' || type === 'SPRITE_STATE') {
-        const key = user.toLowerCase();
-        if (state.sprites.has(key)) {
-            const sprite = state.sprites.get(key);
-            sprite.pendingHealth = health !== undefined ? health : sprite.health;
-            sprite.pendingMaxHealth = maxHealth !== undefined ? maxHealth : sprite.maxHealth;
-            if (isGhost !== undefined) sprite.pendingGhost = isGhost;
-            if (killStreak !== undefined) sprite.killStreak = killStreak;
-            if (isEnhanced !== undefined) sprite.isEnhanced = isEnhanced;
-        } else {
-            const sprite = new Sprite(user, mcUser, health, maxHealth, isGhost, killStreak, isEnhanced);
-            state.sprites.set(key, sprite);
+        if (user) {
+            const key = user.toLowerCase();
+            if (state.sprites.has(key)) {
+                const sprite = state.sprites.get(key);
+                sprite.pendingHealth = health !== undefined ? health : sprite.health;
+                sprite.pendingMaxHealth = maxHealth !== undefined ? maxHealth : sprite.maxHealth;
+                if (isGhost !== undefined) sprite.pendingGhost = isGhost;
+                if (killStreak !== undefined) sprite.killStreak = killStreak;
+                if (isEnhanced !== undefined) sprite.isEnhanced = isEnhanced;
+            } else {
+                const sprite = new Sprite(user, mcUser || user, health ?? 100, maxHealth ?? 100, isGhost ?? false, killStreak ?? 0, isEnhanced ?? false);
+                state.sprites.set(key, sprite);
+            }
         }
     } else if (type === 'SPRITE_LEAVE' || type === 'SPRITE_REMOVE') {
-        const key = user.toLowerCase();
-        if (state.sprites.has(key)) {
-            const sprite = state.sprites.get(key);
-            sprite.state = 'exiting';
-            console.log(`[Client] Sprite exiting for ${user}`);
+        if (user) {
+            const key = user.toLowerCase();
+            if (state.sprites.has(key)) {
+                const sprite = state.sprites.get(key);
+                sprite.state = 'exiting';
+                console.log(`[Client] Sprite exiting for ${user}`);
+            }
         }
     } else if (type === 'SPRITE_NUDGE') {
-        const key = user.toLowerCase();
-        if (state.sprites.has(key)) {
-            state.sprites.get(key).nudge(direction);
+        if (user) {
+            const key = user.toLowerCase();
+            if (state.sprites.has(key)) {
+                state.sprites.get(key).nudge(direction);
+            }
         }
     } else if (type === 'BUFF_DROP_SPAWN' || type === 'DIAMOND_DROP_SPAWN') {
         state.activeDiamondDrop = new MinecraftDiamondDrop(x || (Math.random() * (canvas.width - 200) + 100), canvas.width, canvas.height);
