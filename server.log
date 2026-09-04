@@ -2,29 +2,27 @@
 > sprite-walker@1.0.0 start
 > node server/index.js
 
-[2026-09-04T06:20:51.406Z] Sprite Walker server running at http://localhost:3847
-[2026-09-04T06:20:51.407Z] Listening to Twitch channel: #subcidal
-[2026-09-04T06:20:51.407Z] Max sprites: 50
-[2026-09-04T06:20:51.407Z] Cooldowns: wave=4000ms, attack=5000ms
-[2026-09-04T06:20:51.406Z] Sprite Walker server running at http://localhost:3847
-[2026-09-04T06:20:51.407Z] Listening to Twitch channel: #subcidal
-[2026-09-04T06:20:51.407Z] Max sprites: 50
-[2026-09-04T06:20:51.407Z] Cooldowns: wave=4000ms, attack=5000ms
-[2026-09-04T06:20:52.295Z] [Twitch] nastyaextrasilly: yeah just with mouse and keyboard like a human would do
-[2026-09-04T06:20:52.295Z] [Twitch] nastyaextrasilly: yeah just with mouse and keyboard like a human would do
-[2026-09-04T06:20:57.252Z] OBS Overlay connected via WebSocket
-[2026-09-04T06:20:57.252Z] OBS Overlay connected via WebSocket
-[2026-09-04T06:21:03.893Z] [Twitch] Subcidal: !join
-[2026-09-04T06:21:03.893Z] [Twitch] Subcidal: !join
-[2026-09-04T06:21:03.894Z] [Join] Subcidal joined with Minecraft skin: Subcidal
-[2026-09-04T06:21:03.894Z] [Join] Subcidal joined with Minecraft skin: Subcidal
-[2026-09-04T06:21:05.726Z] [Twitch] Subcidal: !ai
-[2026-09-04T06:21:05.726Z] [Twitch] Subcidal: !ai
-[2026-09-04T06:21:05.726Z] [AI Spawn] AI character spawned with Steve skin
-[2026-09-04T06:21:05.726Z] [AI Spawn] AI character spawned with Steve skin
-[2026-09-04T06:21:07.472Z] [Twitch] Subcidal: !creeper
-[2026-09-04T06:21:07.472Z] [Twitch] Subcidal: !creeper
-[2026-09-04T06:21:07.472Z] [Creeper] Manual creeper spawn requested by Subcidal
-[2026-09-04T06:21:07.472Z] [Creeper] Manual creeper spawn requested by Subcidal
-[2026-09-04T06:22:04.938Z] [Creeper Explosion] Creeper blew up Subcidal for -80 HP (20/100)
-[2026-09-04T06:22:04.938Z] [Creeper Explosion] Creeper blew up Subcidal for -80 HP (20/100)
+[2026-09-04T06:26:26.608Z] Sprite Walker server running at http://localhost:3847
+[2026-09-04T06:26:26.609Z] Listening to Twitch channel: #subcidal
+[2026-09-04T06:26:26.609Z] Max sprites: 50
+[2026-09-04T06:26:26.609Z] Cooldowns: wave=4000ms, attack=5000ms
+[2026-09-04T06:26:26.608Z] Sprite Walker server running at http://localhost:3847
+[2026-09-04T06:26:26.609Z] Listening to Twitch channel: #subcidal
+[2026-09-04T06:26:26.609Z] Max sprites: 50
+[2026-09-04T06:26:26.609Z] Cooldowns: wave=4000ms, attack=5000ms
+[2026-09-04T06:26:32.302Z] OBS Overlay connected via WebSocket
+[2026-09-04T06:26:32.302Z] OBS Overlay connected via WebSocket
+[2026-09-04T06:26:35.194Z] [Twitch] Subcidal: !join
+[2026-09-04T06:26:35.194Z] [Twitch] Subcidal: !join
+[2026-09-04T06:26:35.195Z] [Join] Subcidal joined with Minecraft skin: Subcidal
+[2026-09-04T06:26:35.195Z] [Join] Subcidal joined with Minecraft skin: Subcidal
+[2026-09-04T06:26:35.990Z] [Twitch] Subcidal: !ai
+[2026-09-04T06:26:35.990Z] [Twitch] Subcidal: !ai
+[2026-09-04T06:26:35.990Z] [AI Spawn] AI character spawned with Steve skin
+[2026-09-04T06:26:35.990Z] [AI Spawn] AI character spawned with Steve skin
+[2026-09-04T06:26:39.218Z] [Twitch] Subcidal: !creeper
+[2026-09-04T06:26:39.218Z] [Twitch] Subcidal: !creeper
+[2026-09-04T06:26:39.218Z] [Creeper] Manual creeper spawn requested by Subcidal
+[2026-09-04T06:26:39.218Z] [Creeper] Manual creeper spawn requested by Subcidal
+[2026-09-04T06:27:03.458Z] [Creeper Explosion] Creeper blew up AI for -69 HP (31/100)
+[2026-09-04T06:27:03.458Z] [Creeper Explosion] Creeper blew up AI for -69 HP (31/100)

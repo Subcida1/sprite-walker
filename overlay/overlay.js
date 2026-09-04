@@ -1558,17 +1558,15 @@ class CreeperMob {
             if (this.fuseTimer <= 0) {
                 // EXPLODE!
                 creeperExplosions.push(new CreeperExplosion(this.x, this.y));
-                // Damage players within blast radius (100px) with steep falloff (almost one-shot at center)
+                // Damage players within blast radius (100px) — guaranteed 100+ damage (instant one-shot)
                 const blastRadius = 100;
-                const maxDamage = 95; // Point-blank leaves just 5 HP
-                const minDamage = 25; // Outer edge damage
+                const damage = 120; // Always one-shot / instant ghost
                 for (const [_, sprite] of sprites) {
                     let diff = sprite.x - this.x;
                     if (diff > canvas.width / 2) diff -= canvas.width;
                     if (diff < -canvas.width / 2) diff += canvas.width;
                     const dist = Math.abs(diff);
                     if (dist < blastRadius) {
-                        const damage = Math.round(maxDamage - (dist / blastRadius) * (maxDamage - minDamage));
                         if (wsInstance && wsInstance.readyState === WebSocket.OPEN) {
                             wsInstance.send(JSON.stringify({ type: 'CREEPER_EXPLOSION', target: sprite.username, damage }));
                         }
@@ -1601,10 +1599,12 @@ class CreeperMob {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        const totalHeight = 52; // Same height as player avatar boxes
+        const totalHeight = 60; // Slightly taller than player avatars
         const headSize = 28;
         const bodyWidth = 24;
-        const bodyHeight = 24;
+        const bodyHeight = 22;
+        const feetHeight = 8;
+        const feetWidth = 28;
 
         // Fusing white flash pulse check
         const isFlashing = this.state === 'fusing' && Math.floor(this.fuseTimer / 6) % 2 === 0;
@@ -1612,11 +1612,15 @@ class CreeperMob {
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 2.5;
 
-        // 1. Draw Body (lower box)
-        ctx.fillRect(-bodyWidth / 2, -bodyHeight, bodyWidth, bodyHeight);
-        ctx.strokeRect(-bodyWidth / 2, -bodyHeight, bodyWidth, bodyHeight);
+        // 1. Draw Feet (bottom flat rectangle)
+        ctx.fillRect(-feetWidth / 2, -feetHeight, feetWidth, feetHeight);
+        ctx.strokeRect(-feetWidth / 2, -feetHeight, feetWidth, feetHeight);
 
-        // 2. Draw Head (upper box sitting on body)
+        // 2. Draw Body (middle box)
+        ctx.fillRect(-bodyWidth / 2, -feetHeight - bodyHeight, bodyWidth, bodyHeight);
+        ctx.strokeRect(-bodyWidth / 2, -feetHeight - bodyHeight, bodyWidth, bodyHeight);
+
+        // 3. Draw Head (upper box sitting on body)
         const headY = -totalHeight;
         ctx.fillStyle = isFlashing ? '#ffffff' : '#45b345';
         ctx.fillRect(-headSize / 2, headY, headSize, headSize);
