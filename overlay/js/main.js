@@ -80,7 +80,7 @@ function animate() {
     for (let i = state.slimeMobs.length - 1; i >= 0; i--) {
         const slime = state.slimeMobs[i];
         safeUpdate(() => slime.update(state.slimeMobs, state.sprites, state.wsInstance), 'SlimeMob');
-        safeDraw(slime, ctx, 'SlimeMob');
+        safeDraw(() => slime.draw(ctx), 'SlimeMob');
         if (slime.health <= 0 || slime.exited) {
             state.slimeMobs.splice(i, 1);
         }
@@ -90,7 +90,7 @@ function animate() {
     for (let i = state.creeperMobs.length - 1; i >= 0; i--) {
         const creeper = state.creeperMobs[i];
         safeUpdate(() => creeper.update(state.slimeMobs, state.creeperMobs, state.sprites, state.wsInstance), 'CreeperMob');
-        safeDraw(creeper, ctx, 'CreeperMob');
+        safeDraw(() => creeper.draw(ctx), 'CreeperMob');
         if (creeper.health <= 0 || creeper.exited) {
             state.creeperMobs.splice(i, 1);
         }
@@ -110,7 +110,7 @@ function animate() {
     for (let i = state.zombieMobs.length - 1; i >= 0; i--) {
         const z = state.zombieMobs[i];
         safeUpdate(() => z.update(state.slimeMobs, state.creeperMobs, state.zombieMobs, state.sprites, state.wsInstance), 'ZombieMob');
-        safeDraw(z, ctx, 'ZombieMob');
+        safeDraw(() => z.draw(ctx), 'ZombieMob');
         if (z.health <= 0 || z.exited) {
             state.zombieMobs.splice(i, 1);
         }
@@ -120,7 +120,7 @@ function animate() {
     for (let i = state.ghastMobs.length - 1; i >= 0; i--) {
         const g = state.ghastMobs[i];
         safeUpdate(() => g.update(state.sprites, state.ghastFireballs, state.wsInstance), 'GhastMob');
-        safeDraw(g, ctx, 'GhastMob');
+        safeDraw(() => g.draw(ctx), 'GhastMob');
         if (g.health <= 0 || g.exited) {
             state.ghastMobs.splice(i, 1);
         }
@@ -142,7 +142,7 @@ function animate() {
     for (let i = state.phantomMobs.length - 1; i >= 0; i--) {
         const p = state.phantomMobs[i];
         safeUpdate(() => p.update(state.sprites, state.wsInstance), 'PhantomMob');
-        safeDraw(p, ctx, 'PhantomMob');
+        safeDraw(() => p.draw(ctx), 'PhantomMob');
         if (p.health <= 0 || p.exited) {
             state.phantomMobs.splice(i, 1);
         }
@@ -151,7 +151,7 @@ function animate() {
     // 8. Player Sprites (Bottom Quarter)
     for (const [key, sprite] of state.sprites) {
         safeUpdate(() => sprite.update(), `Sprite:${sprite.username}`);
-        safeDraw(sprite, ctx, `Sprite:${sprite.username}`);
+        safeDraw(() => sprite.draw(ctx), `Sprite:${sprite.username}`);
         if (sprite.exited) {
             state.sprites.delete(key);
         }
