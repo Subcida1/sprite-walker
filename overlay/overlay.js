@@ -851,7 +851,7 @@ class Sprite {
             ctx.strokeStyle = `hsl(${(hue + 180) % 360}, 90%, 40%)`; // Complementary border
         } else {
             ctx.fillStyle = '#72d653'; // Slime green
-            ctx.strokeStyle = '#ffffff'; // Clean white border
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)'; // Soft 35% opacity white border
         }
         ctx.fillRect(-halfSize, -size, size, size);
         ctx.lineWidth = 3;
