@@ -1418,8 +1418,240 @@ class SlimeMob {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Creeper NPC Mobs (client-side ambient AI) - Explode when near players!
+// ---------------------------------------------------------------------------
+
+class CreeperExplosion {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.particles = [];
+        for (let i = 0; i < 24; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 1 + Math.random() * 4;
+            this.particles.push({
+                x: x,
+                y: y - 24,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 1,
+                size: 4 + Math.random() * 8,
+                color: Math.random() > 0.5 ? '#55ff55' : '#ffffff',
+                alpha: 1.0,
+                decay: 0.02 + Math.random() * 0.03
+            });
+        }
+    }
+
+    update() {
+        for (const p of this.particles) {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.alpha -= p.decay;
+        }
+        this.particles = this.particles.filter(p => p.alpha > 0);
+    }
+
+    draw(ctx) {
+        ctx.save();
+        for (const p of this.particles) {
+            ctx.globalAlpha = Math.max(0, p.alpha);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+        }
+        ctx.restore();
+    }
+
+    isDead() {
+        return this.particles.length === 0;
+    }
+}
+
+const creeperMobs = [];
+const creeperExplosions = [];
+
+class CreeperMob {
+    constructor(x, y) {
+        this.x = x;
+        this.groundY = y;
+        this.y = y;
+        this.size = 46;
+        this.health = 3;
+        this.maxHealth = 3;
+        this.damage = 3;
+        this.speed = 1.0;
+
+        this.state = 'entering'; // entering, wandering, fusing, exiting
+        this.stateTimer = Math.floor(Math.random() * 90) + 30;
+        this.startX = x;
+        this.targetX = x;
+        this.facingRight = Math.random() > 0.5;
+        this.hitEffectTimer = 0;
+        this.exited = false;
+
+        this.fuseTimer = 0;
+        this.maxFuse = 90; // 1.5 seconds @ 60fps
+    }
+
+    update() {
+        this.groundY = canvas.height - 25;
+
+        // Separation steering from other creepers/slimes
+        for (const other of [...slimeMobs, ...creeperMobs]) {
+            if (other === this) continue;
+            const dist = Math.abs(other.x - this.x);
+            if (dist < 45 && dist > 0) {
+                const glideDir = Math.sign(this.x - other.x);
+                this.x += glideDir * 0.3;
+            }
+        }
+
+        if (this.hitEffectTimer > 0) this.hitEffectTimer--;
+
+        if (this.state === 'entering') {
+            const dx = this.targetX - this.x;
+            this.facingRight = dx > 0;
+            if (Math.abs(dx) > 1.5) {
+                this.x += Math.sign(dx) * Math.min(this.speed, Math.abs(dx));
+            } else {
+                this.x = this.targetX;
+                this.state = 'wandering';
+                this.stateTimer = Math.floor(Math.random() * 120) + 60;
+            }
+        } else if (this.state === 'wandering') {
+            // Check proximity to any player sprite across screen seam using wrappedDist
+            let nearestPlayer = null;
+            let minPlayerDist = Infinity;
+            for (const [_, sprite] of sprites) {
+                // compute wrapped distance
+                let diff = sprite.x - this.x;
+                if (diff > canvas.width / 2) diff -= canvas.width;
+                if (diff < -canvas.width / 2) diff += canvas.width;
+                const dist = Math.abs(diff);
+                if (dist < minPlayerDist) {
+                    minPlayerDist = dist;
+                    nearestPlayer = sprite;
+                }
+            }
+
+            if (nearestPlayer && minPlayerDist <= 55) {
+                this.state = 'fusing';
+                this.fuseTimer = this.maxFuse;
+                console.log(`[Creeper] Fuse lit near player!`);
+            } else {
+                // Normal wander / creep toward random target
+                if (this.stateTimer > 0) {
+                    this.stateTimer--;
+                } else {
+                    this.targetX = Math.random() * (canvas.width - 160) + 80;
+                    this.stateTimer = Math.floor(Math.random() * 180) + 90;
+                }
+                const dx = this.targetX - this.x;
+                if (Math.abs(dx) > 1.5) {
+                    this.facingRight = dx > 0;
+                    this.x += Math.sign(dx) * Math.min(this.speed * 0.8, Math.abs(dx));
+                }
+            }
+        } else if (this.state === 'fusing') {
+            // Stop and flash
+            this.fuseTimer--;
+            if (this.fuseTimer <= 0) {
+                // EXPLODE!
+                creeperExplosions.push(new CreeperExplosion(this.x, this.y));
+                // Damage players within blast radius
+                for (const [_, sprite] of sprites) {
+                    let diff = sprite.x - this.x;
+                    if (diff > canvas.width / 2) diff -= canvas.width;
+                    if (diff < -canvas.width / 2) diff += canvas.width;
+                    if (Math.abs(diff) < 70) {
+                        sprite.hurt();
+                    }
+                }
+                this.exited = true;
+            }
+        } else if (this.state === 'exiting') {
+            const dx = this.targetX - this.x;
+            this.facingRight = dx > 0;
+            this.x += Math.sign(dx) * this.speed;
+            if (this.x < -60 || this.x > canvas.width + 60) {
+                this.exited = true;
+            }
+        }
+    }
+
+    hurt(amount) {
+        this.health -= amount;
+        this.hitEffectTimer = 14;
+        if (this.health <= 0) {
+            creeperExplosions.push(new CreeperExplosion(this.x, this.y));
+            return true;
+        }
+        return false;
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        const size = this.size;
+        const halfSize = size / 2;
+
+        // Creeper green body
+        ctx.fillStyle = '#3c993c';
+        ctx.fillRect(-halfSize, -size, size, size);
+
+        // Fusing white flash pulse
+        if (this.state === 'fusing') {
+            const flash = Math.floor(this.fuseTimer / 6) % 2;
+            if (flash === 0) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.fillRect(-halfSize, -size, size, size);
+            }
+        }
+
+        // Outline
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(-halfSize, -size, size, size);
+
+        // Creeper face (eyes + nose/mouth T-shape)
+        ctx.fillStyle = '#000000';
+        const dir = this.facingRight ? 1 : -1;
+        // Eyes
+        ctx.fillRect(dir * 8 - 4, -size * 0.75, 8, 12);
+        ctx.fillRect(dir * -2 - 4, -size * 0.75, 8, 12);
+        // Nose
+        ctx.fillRect(-4, -size * 0.5, 8, 10);
+        // Mouth
+        ctx.fillRect(-10, -size * 0.35, 20, 14);
+
+        if (this.state === 'fusing') {
+            ctx.fillStyle = '#ff3333';
+            ctx.font = 'bold 12px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('Sssss...', 0, -size - 8);
+        }
+
+        ctx.restore();
+    }
+}
+
+function spawnCreeperFromEdge() {
+    if (slimeMobs.length + creeperMobs.length >= 6) return;
+    const fromLeft = Math.random() > 0.5;
+    const startX = fromLeft ? -80 : canvas.width + 80;
+    const targetX = Math.random() * (canvas.width - 240) + 120;
+    const creeper = new CreeperMob(startX, canvas.height - 25);
+    creeper.targetX = targetX;
+    creeper.startX = startX;
+    creeper.state = 'entering';
+    creeperMobs.push(creeper);
+    console.log(`[Creeper] Spawned offscreen at x=${startX}, walking to x=${targetX}`);
+}
+
 // Spawn a big slime, starting visibly on screen
 let slimeSpawnTimer = 0;
+let creeperSpawnTimer = 0;
 function spawnSlimeFromEdge() {
     const fromLeft = Math.random() > 0.5;
     // Add small random offset so multiple slimes don't spawn at exact same offscreen coordinate
@@ -1438,11 +1670,23 @@ function spawnSlimeFromEdge() {
     console.log(`[Slime] Big slime spawned offscreen at x=${startX}, hopping to x=${targetX}`);
 }
 
-// Click/tap a slime to damage it (players can defend themselves)
+// Click/tap a slime or creeper to damage it (players can defend themselves)
 canvas.addEventListener('click', (e) => {
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
+    // Hit-test creepers first
+    for (let i = creeperMobs.length - 1; i >= 0; i--) {
+        const c = creeperMobs[i];
+        const half = c.size / 2;
+        if (mx >= c.x - half && mx <= c.x + half && my >= c.y - c.size && my <= c.y) {
+            const killed = c.hurt(2);
+            if (killed) {
+                creeperMobs.splice(i, 1);
+            }
+            return;
+        }
+    }
     // Find slime under cursor (hit-test from topmost/tiny to bottom)
     for (let i = slimeMobs.length - 1; i >= 0; i--) {
         const s = slimeMobs[i];
@@ -1665,6 +1909,34 @@ function animate() {
         // Remove dead slimes or slimes that have exited offscreen
         if (s.health <= 0 || s.exited) {
             slimeMobs.splice(i, 1);
+        }
+    }
+
+    // Creeper Mobs — update, draw, explosions, and periodic spawn
+    if (!window.nextCreeperSpawnIn) {
+        window.nextCreeperSpawnIn = Math.floor(Math.random() * 18000) + 36000; // 10-15 min @ 60fps
+    }
+    if (++creeperSpawnTimer >= window.nextCreeperSpawnIn) {
+        creeperSpawnTimer = 0;
+        window.nextCreeperSpawnIn = Math.floor(Math.random() * 18000) + 36000;
+        if (slimeMobs.length + creeperMobs.length < 6) {
+            spawnCreeperFromEdge();
+        }
+    }
+    for (let i = creeperMobs.length - 1; i >= 0; i--) {
+        const c = creeperMobs[i];
+        c.update();
+        c.draw(ctx);
+        if (c.health <= 0 || c.exited) {
+            creeperMobs.splice(i, 1);
+        }
+    }
+    for (let i = creeperExplosions.length - 1; i >= 0; i--) {
+        const exp = creeperExplosions[i];
+        exp.update();
+        exp.draw(ctx);
+        if (exp.isDead()) {
+            creeperExplosions.splice(i, 1);
         }
     }
 
