@@ -1523,6 +1523,7 @@ class CreeperMob {
             let nearestPlayer = null;
             let minPlayerDist = Infinity;
             for (const [_, sprite] of sprites) {
+                if (sprite.isGhost) continue;
                 // compute wrapped distance
                 let diff = sprite.x - this.x;
                 if (diff > canvas.width / 2) diff -= canvas.width;
@@ -1562,6 +1563,7 @@ class CreeperMob {
                 const blastRadius = 100;
                 const damage = 120; // Always one-shot / instant ghost
                 for (const [_, sprite] of sprites) {
+                    if (sprite.isGhost) continue;
                     let diff = sprite.x - this.x;
                     if (diff > canvas.width / 2) diff -= canvas.width;
                     if (diff < -canvas.width / 2) diff += canvas.width;
@@ -1720,6 +1722,7 @@ class ZombieMob {
             let nearestPlayer = null;
             let minPlayerDist = Infinity;
             for (const [_, sprite] of sprites) {
+                if (sprite.isGhost) continue;
                 let diff = sprite.x - this.x;
                 if (diff > canvas.width / 2) diff -= canvas.width;
                 if (diff < -canvas.width / 2) diff += canvas.width;

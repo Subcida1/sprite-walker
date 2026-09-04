@@ -2,27 +2,39 @@
 > sprite-walker@1.0.0 start
 > node server/index.js
 
-[2026-09-04T06:26:26.608Z] Sprite Walker server running at http://localhost:3847
-[2026-09-04T06:26:26.609Z] Listening to Twitch channel: #subcidal
-[2026-09-04T06:26:26.609Z] Max sprites: 50
-[2026-09-04T06:26:26.609Z] Cooldowns: wave=4000ms, attack=5000ms
-[2026-09-04T06:26:26.608Z] Sprite Walker server running at http://localhost:3847
-[2026-09-04T06:26:26.609Z] Listening to Twitch channel: #subcidal
-[2026-09-04T06:26:26.609Z] Max sprites: 50
-[2026-09-04T06:26:26.609Z] Cooldowns: wave=4000ms, attack=5000ms
-[2026-09-04T06:26:32.302Z] OBS Overlay connected via WebSocket
-[2026-09-04T06:26:32.302Z] OBS Overlay connected via WebSocket
-[2026-09-04T06:26:35.194Z] [Twitch] Subcidal: !join
-[2026-09-04T06:26:35.194Z] [Twitch] Subcidal: !join
-[2026-09-04T06:26:35.195Z] [Join] Subcidal joined with Minecraft skin: Subcidal
-[2026-09-04T06:26:35.195Z] [Join] Subcidal joined with Minecraft skin: Subcidal
-[2026-09-04T06:26:35.990Z] [Twitch] Subcidal: !ai
-[2026-09-04T06:26:35.990Z] [Twitch] Subcidal: !ai
-[2026-09-04T06:26:35.990Z] [AI Spawn] AI character spawned with Steve skin
-[2026-09-04T06:26:35.990Z] [AI Spawn] AI character spawned with Steve skin
-[2026-09-04T06:26:39.218Z] [Twitch] Subcidal: !creeper
-[2026-09-04T06:26:39.218Z] [Twitch] Subcidal: !creeper
-[2026-09-04T06:26:39.218Z] [Creeper] Manual creeper spawn requested by Subcidal
-[2026-09-04T06:26:39.218Z] [Creeper] Manual creeper spawn requested by Subcidal
-[2026-09-04T06:27:03.458Z] [Creeper Explosion] Creeper blew up AI for -69 HP (31/100)
-[2026-09-04T06:27:03.458Z] [Creeper Explosion] Creeper blew up AI for -69 HP (31/100)
+[2026-09-04T06:51:07.594Z] Sprite Walker server running at http://localhost:3847
+[2026-09-04T06:51:07.594Z] Listening to Twitch channel: #subcidal
+[2026-09-04T06:51:07.594Z] Max sprites: 50
+[2026-09-04T06:51:07.594Z] Cooldowns: wave=4000ms, attack=5000ms
+[2026-09-04T06:51:07.594Z] Sprite Walker server running at http://localhost:3847
+[2026-09-04T06:51:07.594Z] Listening to Twitch channel: #subcidal
+[2026-09-04T06:51:07.594Z] Max sprites: 50
+[2026-09-04T06:51:07.594Z] Cooldowns: wave=4000ms, attack=5000ms
+[2026-09-04T06:51:14.316Z] OBS Overlay connected via WebSocket
+[2026-09-04T06:51:14.316Z] OBS Overlay connected via WebSocket
+[2026-09-04T06:51:15.673Z] [Twitch] Subcidal: !ai
+[2026-09-04T06:51:15.673Z] [Twitch] Subcidal: !ai
+[2026-09-04T06:51:15.673Z] [AI Spawn] AI character spawned with Steve skin
+[2026-09-04T06:51:15.673Z] [AI Spawn] AI character spawned with Steve skin
+[2026-09-04T06:51:16.762Z] [Twitch] Subcidal: !join
+[2026-09-04T06:51:16.762Z] [Twitch] Subcidal: !join
+[2026-09-04T06:51:16.763Z] [Join] Subcidal joined with Minecraft skin: Subcidal
+[2026-09-04T06:51:16.763Z] [Join] Subcidal joined with Minecraft skin: Subcidal
+[2026-09-04T06:51:21.694Z] [Twitch] Subcidal: !zombie
+[2026-09-04T06:51:21.694Z] [Twitch] Subcidal: !zombie
+[2026-09-04T06:51:21.694Z] [Zombie] Manual zombie spawn requested by Subcidal
+[2026-09-04T06:51:21.694Z] [Zombie] Manual zombie spawn requested by Subcidal
+[2026-09-04T06:52:06.605Z] [Twitch] Subcidal: !creeper
+[2026-09-04T06:52:06.605Z] [Twitch] Subcidal: !creeper
+[2026-09-04T06:52:06.605Z] [Creeper] Manual creeper spawn requested by Subcidal
+[2026-09-04T06:52:06.605Z] [Creeper] Manual creeper spawn requested by Subcidal
+[2026-09-04T06:52:23.298Z] [Creeper Explosion] Creeper blew up Subcidal for -120 HP (0/100)
+[2026-09-04T06:52:23.298Z] [Creeper Explosion] Creeper blew up Subcidal for -120 HP (0/100)
+[2026-09-04T06:52:23.298Z] [Ghost] Subcidal was blown up by a Creeper and entered GHOST mode!
+[2026-09-04T06:52:23.298Z] [Ghost] Subcidal was blown up by a Creeper and entered GHOST mode!
+[2026-09-04T06:52:34.763Z] [Zombie Attack] Zombie hit AI for -30 HP (70/100)
+[2026-09-04T06:52:34.763Z] [Zombie Attack] Zombie hit AI for -30 HP (70/100)
+[2026-09-04T06:52:41.797Z] [Zombie Attack] Zombie hit AI for -30 HP (40/100)
+[2026-09-04T06:52:41.797Z] [Zombie Attack] Zombie hit AI for -30 HP (40/100)
+[2026-09-04T06:54:30.896Z] [Zombie Attack] Zombie hit AI for -30 HP (10/100)
+[2026-09-04T06:54:30.896Z] [Zombie Attack] Zombie hit AI for -30 HP (10/100)
