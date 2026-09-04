@@ -1,0 +1,22 @@
+export const state = {
+    sprites: new Map(),
+    slimeMobs: [],
+    creeperMobs: [],
+    zombieMobs: [],
+    ghastMobs: [],
+    ghastFireballs: [],
+    phantomMobs: [],
+    creeperExplosions: [],
+    bloodParticles: [],
+    ghostParticles: [],
+    diamondDrops: [],
+    activeDiamondDrop: null,
+    wsInstance: null,
+    phantomActive: false,
+    phantomCycleFrames: 0,
+    phantomActiveFramesLeft: 0,
+    surfaceMobSpawnTimer: 0,
+    nextSurfaceMobSpawnIn: 18000,
+    ghastSpawnTimer: 0,
+    nextGhastSpawnIn: 162000
+};
