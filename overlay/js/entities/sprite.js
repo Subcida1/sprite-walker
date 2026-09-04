@@ -366,14 +366,20 @@ export class Sprite {
             ctx.fillText(this.username.slice(0, 4).toUpperCase(), 0, -halfBox + 4);
         }
 
-        ctx.fillStyle = '#222';
-        ctx.font = 'bold 12px monospace';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 3;
+        ctx.font = 'bold 13px monospace';
         ctx.textAlign = 'center';
+        ctx.strokeText(this.username, 0, boxSize + 16);
         ctx.fillText(this.username, 0, boxSize + 16);
         
         if (this.isEnhanced) {
             ctx.fillStyle = '#ffd700';
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 3;
             ctx.font = 'bold 14px monospace';
+            ctx.strokeText('★ ENHANCED ★', 0, boxSize + 32);
             ctx.fillText('★ ENHANCED ★', 0, boxSize + 32);
         }
     }
