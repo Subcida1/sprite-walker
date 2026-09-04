@@ -110,11 +110,11 @@ class GhostParticle {
     }
 }
 
-// Buff drop falling particle
-const buffDropParticles = [];
-let activeBuffDrop = null; // { x, y, spawnTime, fallProgress, claimed }
+// Minecraft Diamond Drop falling particle
+const diamondDrops = [];
+let activeDiamondDrop = null;
 
-class BuffDropParticle {
+class MinecraftDiamondDrop {
     constructor(x) {
         this.targetX = x;
         this.x = x;
@@ -133,7 +133,7 @@ class BuffDropParticle {
             return this.life > 0;
         }
         const elapsed = Date.now() - this.spawnTime;
-        const fallDuration = 1200; // 1.2s fall
+        const fallDuration = 1000; // 1s fall
         const progress = Math.min(1, elapsed / fallDuration);
         // Ease out bounce
         const eased = 1 - Math.pow(1 - progress, 3);
@@ -141,7 +141,7 @@ class BuffDropParticle {
         
         // Once landed on the floor, gently bob up and down
         if (progress >= 1) {
-            this.y = this.groundY + Math.sin(Date.now() * 0.008) * 6;
+            this.y = this.groundY + Math.sin(Date.now() * 0.006) * 4;
         }
         return true;
     }
@@ -150,56 +150,39 @@ class BuffDropParticle {
         if (this.claimed) {
             ctx.globalAlpha = Math.max(0, (this.claimTime + 500 - Date.now()) / 500);
         }
-        
-        // Magical RGB shimmering color cycle
-        const time = Date.now();
-        const hue = (time * 0.15) % 360;
-        // Gentle pulse (less dramatic flash)
-        const pulse = Math.sin(time * 0.008) * 0.12 + 0.9;
-        const size = 16 * pulse;
-        
-        // Translucent glassy center diamond (soft magical glow behind)
-        const glassFill = `hsla(${hue}, 90%, 65%, 0.45)`;
-        const glassBorder = `hsla(${(hue + 90) % 360}, 100%, 80%, 0.9)`;
 
-        // Soft outer radial glow (subtle, translucent)
-        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, size * 1.6);
-        gradient.addColorStop(0, `hsla(${hue}, 100%, 70%, 0.35)`);
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, size * 1.6, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Draw a translucent glassy diamond center
-        drawDiamond(ctx, this.x, this.y, size);
-        ctx.fillStyle = glassFill;
-        ctx.fill();
-        ctx.strokeStyle = glassBorder;
+        ctx.translate(this.x, this.y);
+
+        // Draw classic Minecraft Diamond item shape (pixelated gem)
+        ctx.fillStyle = '#00ffff'; // Cyan diamond body
+        ctx.strokeStyle = '#004444';
         ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        // Small glass highlight facet (upper-left)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+
         ctx.beginPath();
-        ctx.arc(this.x - size * 0.25, this.y - size * 0.3, size * 0.18, 0, Math.PI * 2);
+        ctx.moveTo(0, -12);
+        ctx.lineTo(10, -4);
+        ctx.lineTo(6, 12);
+        ctx.lineTo(0, 16);
+        ctx.lineTo(-6, 12);
+        ctx.lineTo(-10, -4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Inner lighter facets for 3D diamond shine
+        ctx.fillStyle = '#80ffff';
+        ctx.beginPath();
+        ctx.moveTo(0, -10);
+        ctx.lineTo(6, -3);
+        ctx.lineTo(0, 4);
+        ctx.lineTo(-6, -3);
+        ctx.closePath();
         ctx.fill();
 
-        // Orbit translucent glassy diamonds (side sparkles)
-        for (let i = 0; i < 4; i++) {
-            const angle = (time * 0.003) + (i * Math.PI / 2);
-            const orbitDist = size * 1.5;
-            const sx = this.x + Math.cos(angle) * orbitDist;
-            const sy = this.y + Math.sin(angle) * orbitDist;
-            const sparkleHue = (hue + 120) % 360;
-            drawDiamond(ctx, sx, sy, 3.5);
-            ctx.fillStyle = `hsla(${sparkleHue}, 100%, 78%, 0.55)`;
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-        }
-        
+        // Bright white highlight specular top-left
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-3, -8, 3, 3);
+
         ctx.restore();
     }
 }
@@ -2443,19 +2426,19 @@ function handleCommand(cmd) {
         if (sprites.has(key)) {
             sprites.get(key).nudge(direction);
         }
-    } else if (type === 'BUFF_DROP_SPAWN') {
-        activeBuffDrop = new BuffDropParticle(x);
-        buffDropParticles.push(activeBuffDrop);
-        console.log(`[Client] Buff drop spawned at x=${x}`);
-    } else if (type === 'BUFF_CLAIMED') {
-        if (activeBuffDrop) {
-            activeBuffDrop.claimed = true;
-            activeBuffDrop.claimTime = Date.now();
+    } else if (type === 'BUFF_DROP_SPAWN' || type === 'DIAMOND_DROP_SPAWN') {
+        activeDiamondDrop = new MinecraftDiamondDrop(x || (Math.random() * (canvas.width - 200) + 100));
+        diamondDrops.push(activeDiamondDrop);
+        console.log(`[Client] Minecraft Diamond drop spawned at x=${x}`);
+    } else if (type === 'BUFF_CLAIMED' || type === 'DIAMOND_CLAIMED') {
+        if (activeDiamondDrop) {
+            activeDiamondDrop.claimed = true;
+            activeDiamondDrop.claimTime = Date.now();
         }
-        const key = user.toLowerCase();
+        const key = user ? user.toLowerCase() : '';
         if (sprites.has(key)) {
             sprites.get(key).setBuffGlow(true);
-            console.log(`[Client] Buff claimed by ${user}`);
+            console.log(`[Client] Diamond claimed by ${user}`);
         }
     } else if (type === 'SLIME_SPAWN') {
         spawnSlimeFromEdge();
@@ -2687,14 +2670,14 @@ function animate() {
         }
     }
 
-    // Buff drop particles (update + draw, remove dead/claimed ones)
-    for (let i = buffDropParticles.length - 1; i >= 0; i--) {
-        const p = buffDropParticles[i];
+    // Diamond drop particles (update + draw, remove dead/claimed ones)
+    for (let i = diamondDrops.length - 1; i >= 0; i--) {
+        const p = diamondDrops[i];
         if (p.update()) {
             p.draw(ctx);
         } else {
-            buffDropParticles.splice(i, 1);
-            if (p === activeBuffDrop) activeBuffDrop = null;
+            diamondDrops.splice(i, 1);
+            if (p === activeDiamondDrop) activeDiamondDrop = null;
         }
     }
 
