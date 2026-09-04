@@ -1475,7 +1475,7 @@ class CreeperMob {
         this.x = x;
         this.groundY = y;
         this.y = y;
-        this.size = 46;
+        this.size = 30; // Head width for hit-testing
         this.health = 3;
         this.maxHealth = 3;
         this.damage = 3;
@@ -1558,23 +1558,20 @@ class CreeperMob {
             if (this.fuseTimer <= 0) {
                 // EXPLODE!
                 creeperExplosions.push(new CreeperExplosion(this.x, this.y));
-                // Damage players within blast radius (100px) with falloff
+                // Damage players within blast radius (100px) with steep falloff (almost one-shot at center)
                 const blastRadius = 100;
-                const maxDamage = 85; // Nearly one-shot at point blank
-                const minDamage = 30; // Still hurts at edge
+                const maxDamage = 95; // Point-blank leaves just 5 HP
+                const minDamage = 25; // Outer edge damage
                 for (const [_, sprite] of sprites) {
                     let diff = sprite.x - this.x;
                     if (diff > canvas.width / 2) diff -= canvas.width;
                     if (diff < -canvas.width / 2) diff += canvas.width;
                     const dist = Math.abs(diff);
                     if (dist < blastRadius) {
-                        // Linear falloff from maxDamage at center to minDamage at edge
                         const damage = Math.round(maxDamage - (dist / blastRadius) * (maxDamage - minDamage));
-                        // Send damage request to server so it applies HP + ghosting
                         if (wsInstance && wsInstance.readyState === WebSocket.OPEN) {
                             wsInstance.send(JSON.stringify({ type: 'CREEPER_EXPLOSION', target: sprite.username, damage }));
                         }
-                        // Local visual hit reaction
                         sprite.hurt();
                     }
                 }
@@ -1604,43 +1601,42 @@ class CreeperMob {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        const size = this.size;
-        const halfSize = size / 2;
+        const totalHeight = 52; // Same height as player avatar boxes
+        const headSize = 28;
+        const bodyWidth = 24;
+        const bodyHeight = 24;
 
-        // Creeper green body
-        ctx.fillStyle = '#3c993c';
-        ctx.fillRect(-halfSize, -size, size, size);
-
-        // Fusing white flash pulse
-        if (this.state === 'fusing') {
-            const flash = Math.floor(this.fuseTimer / 6) % 2;
-            if (flash === 0) {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-                ctx.fillRect(-halfSize, -size, size, size);
-            }
-        }
-
-        // Outline
+        // Fusing white flash pulse check
+        const isFlashing = this.state === 'fusing' && Math.floor(this.fuseTimer / 6) % 2 === 0;
+        ctx.fillStyle = isFlashing ? '#ffffff' : '#3c993c';
         ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(-halfSize, -size, size, size);
+        ctx.lineWidth = 2.5;
 
-        // Creeper face (eyes + nose/mouth T-shape)
+        // 1. Draw Body (lower box)
+        ctx.fillRect(-bodyWidth / 2, -bodyHeight, bodyWidth, bodyHeight);
+        ctx.strokeRect(-bodyWidth / 2, -bodyHeight, bodyWidth, bodyHeight);
+
+        // 2. Draw Head (upper box sitting on body)
+        const headY = -totalHeight;
+        ctx.fillStyle = isFlashing ? '#ffffff' : '#45b345';
+        ctx.fillRect(-headSize / 2, headY, headSize, headSize);
+        ctx.strokeRect(-headSize / 2, headY, headSize, headSize);
+
+        // Creeper Face on Head
         ctx.fillStyle = '#000000';
         const dir = this.facingRight ? 1 : -1;
         // Eyes
-        ctx.fillRect(dir * 8 - 4, -size * 0.75, 8, 12);
-        ctx.fillRect(dir * -2 - 4, -size * 0.75, 8, 12);
-        // Nose
-        ctx.fillRect(-4, -size * 0.5, 8, 10);
-        // Mouth
-        ctx.fillRect(-10, -size * 0.35, 20, 14);
+        ctx.fillRect(dir * 5 - 3, headY + 7, 6, 8);
+        ctx.fillRect(dir * -3 - 3, headY + 7, 6, 8);
+        // Nose & Mouth (T-shape)
+        ctx.fillRect(-3, headY + 16, 6, 6);
+        ctx.fillRect(-7, headY + 20, 14, 5);
 
         if (this.state === 'fusing') {
             ctx.fillStyle = '#ff3333';
             ctx.font = 'bold 12px monospace';
             ctx.textAlign = 'center';
-            ctx.fillText('Sssss...', 0, -size - 8);
+            ctx.fillText('Sssss...', 0, -totalHeight - 8);
         }
 
         ctx.restore();
