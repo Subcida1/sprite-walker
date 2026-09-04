@@ -1661,6 +1661,7 @@ class ZombieMob {
 
     update() {
         this.groundY = canvas.height - 25;
+        this.y = this.groundY;
 
         // Separation steering
         for (const other of [...slimeMobs, ...creeperMobs, ...zombieMobs]) {
@@ -1675,12 +1676,17 @@ class ZombieMob {
         if (this.hitEffectTimer > 0) this.hitEffectTimer--;
         if (this.attackCooldown > 0) this.attackCooldown--;
 
+        // Heavy zombie lurch cycle: fast "caught" surge, then slow drag, repeat.
+        // lurchFactor peaks near 1.0 at surge, dips low for the drag.
+        const lurchCycle = this.shamblePhase;
+        const lurchFactor = Math.pow(Math.abs(Math.sin(lurchCycle * 0.5)), 0.6) * 1.6 + 0.35;
+
         if (this.state === 'entering') {
             const dx = this.targetX - this.x;
             this.facingRight = dx > 0;
             if (Math.abs(dx) > 1.5) {
-                this.x += Math.sign(dx) * Math.min(this.speed, Math.abs(dx));
-                this.shamblePhase += 0.1;
+                this.x += Math.sign(dx) * Math.min((this.speed + 0.4) * lurchFactor, Math.abs(dx));
+                this.shamblePhase += 0.11;
             } else {
                 this.x = this.targetX;
                 this.state = 'wandering';
@@ -1702,7 +1708,7 @@ class ZombieMob {
                 }
             }
 
-            if (nearestPlayer && minPlayerDist <= 45 && this.attackCooldown === 0) {
+            if (nearestPlayer && minPlayerDist <= 50 && this.attackCooldown === 0) {
                 // Attack player!
                 this.attackCooldown = 120; // 2s cooldown between attacks
                 if (wsInstance && wsInstance.readyState === WebSocket.OPEN) {
@@ -1720,15 +1726,15 @@ class ZombieMob {
                 const dx = this.targetX - this.x;
                 if (Math.abs(dx) > 1.5) {
                     this.facingRight = dx > 0;
-                    this.x += Math.sign(dx) * Math.min(this.speed * 0.9, Math.abs(dx));
-                    this.shamblePhase += 0.1;
+                    this.x += Math.sign(dx) * Math.min((this.speed + 0.4) * lurchFactor, Math.abs(dx));
+                    this.shamblePhase += 0.11;
                 }
             }
         } else if (this.state === 'exiting') {
             const dx = this.targetX - this.x;
             this.facingRight = dx > 0;
-            this.x += Math.sign(dx) * this.speed;
-            this.shamblePhase += 0.1;
+            this.x += Math.sign(dx) * (this.speed + 0.4) * lurchFactor;
+            this.shamblePhase += 0.11;
             if (this.x < -60 || this.x > canvas.width + 60) {
                 this.exited = true;
             }
@@ -1749,49 +1755,64 @@ class ZombieMob {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        const totalHeight = 58;
-        const headSize = 26;
-        const bodyWidth = 22;
-        const bodyHeight = 22;
-        const feetHeight = 12;
+        const flashing = this.hitEffectTimer > 0 && Math.floor(this.hitEffectTimer / 3) % 2 === 0;
+        const isMoving = this.state === 'entering' || this.state === 'wandering' || this.state === 'exiting';
 
-        ctx.fillStyle = '#3c8527'; // Zombie green skin tone
+        // Heavy forward lean while walking (zombie shuffle stance)
+        const leanPeak = Math.sin(this.shamblePhase * 0.5) * 0.15;
+        const lean = isMoving ? (this.facingRight ? -Math.abs(leanPeak) * 0.6 - 0.05 : Math.abs(leanPeak) * 0.6 + 0.05) : 0;
+        ctx.rotate(lean);
+
+        // Smooth gait: legs swing with the lurch cycle
+        const legSwing = isMoving ? Math.sin(this.shamblePhase) * 5 : 0;
+        const bodyBob = isMoving ? Math.abs(Math.sin(this.shamblePhase * 2)) * 2.5 : 0;
+
+        const feetHeight = 14;
+        const bodyWidth = 20;
+        const bodyHeight = 22;
+        const armReach = 16;
+        const dir = this.facingRight ? 1 : -1;
+
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 2.5;
 
-        // Shamble bobbing offset
-        const isMoving = this.state === 'entering' || this.state === 'wandering';
-        const bob = isMoving ? Math.sin(this.shamblePhase) * 3 : 0;
+        // --- 1. Legs (solidly planted at ground y=0, piston lurch) ---
+        ctx.fillStyle = flashing ? '#ffffff' : '#1e3f66'; // dark pants
+        // Left leg / monster leg stepping
+        ctx.fillRect(-11 + legSwing * 0.7, -feetHeight + Math.max(0, legSwing) * 0.5, 9, feetHeight - Math.max(0, legSwing) * 0.5);
+        ctx.strokeRect(-11 + legSwing * 0.7, -feetHeight + Math.max(0, legSwing) * 0.5, 9, feetHeight - Math.max(0, legSwing) * 0.5);
+        // Right leg
+        ctx.fillRect(2 - legSwing * 0.7, -feetHeight + Math.max(0, -legSwing) * 0.5, 9, feetHeight - Math.max(0, -legSwing) * 0.5);
+        ctx.strokeRect(2 - legSwing * 0.7, -feetHeight + Math.max(0, -legSwing) * 0.5, 9, feetHeight - Math.max(0, -legSwing) * 0.5);
 
-        // 1. Feet (dark pants/boots)
-        ctx.fillStyle = '#1e3f66';
-        ctx.fillRect(-12, -feetHeight, 10, feetHeight);
-        ctx.strokeRect(-12, -feetHeight, 10, feetHeight);
-        ctx.fillRect(2, -feetHeight, 10, feetHeight);
-        ctx.strokeRect(2, -feetHeight, 10, feetHeight);
+        // --- 2. Torso (Cyan shirt) sits directly on the legs ---
+        const bodyY = -feetHeight - bodyHeight - bodyBob;
+        ctx.fillStyle = flashing ? '#a0e0e0' : '#007a7a';
+        ctx.fillRect(-bodyWidth / 2, bodyY, bodyWidth, bodyHeight);
+        ctx.strokeRect(-bodyWidth / 2, bodyY, bodyWidth, bodyHeight);
 
-        // 2. Torso (Cyan shirt)
-        ctx.fillStyle = '#007a7a';
-        ctx.fillRect(-bodyWidth / 2, -feetHeight - bodyHeight + bob, bodyWidth, bodyHeight);
-        ctx.strokeRect(-bodyWidth / 2, -feetHeight - bodyHeight + bob, bodyWidth, bodyHeight);
+        // --- 3. Outstretched Arms reaching forward (classic zombie pose, firmly attached) ---
+        ctx.fillStyle = flashing ? '#ffffff' : '#3c8527';
+        const armY = bodyY + 3;
+        // Front arm (reaches further forward)
+        ctx.fillRect(dir > 0 ? bodyWidth / 2 - 2 : -bodyWidth / 2 - armReach + 2, armY, armReach, 8);
+        ctx.strokeRect(dir > 0 ? bodyWidth / 2 - 2 : -bodyWidth / 2 - armReach + 2, armY, armReach, 8);
+        // Back arm (slightly nearer)
+        ctx.fillRect(dir > 0 ? bodyWidth / 2 - 2 : -bodyWidth / 2 - armReach + 2, armY + 9, armReach - 3, 7);
+        ctx.strokeRect(dir > 0 ? bodyWidth / 2 - 2 : -bodyWidth / 2 - armReach + 2, armY + 9, armReach - 3, 7);
 
-        // 3. Outstretched Arms (Zombie pose)
-        const dir = this.facingRight ? 1 : -1;
-        ctx.fillStyle = '#3c8527';
-        ctx.fillRect(dir > 0 ? bodyWidth / 2 : -bodyWidth / 2 - 14, -feetHeight - bodyHeight + 4 + bob, 14, 8);
-        ctx.strokeRect(dir > 0 ? bodyWidth / 2 : -bodyWidth / 2 - 14, -feetHeight - bodyHeight + 4 + bob, 14, 8);
-
-        // 4. Head
-        const headY = -totalHeight + bob;
-        ctx.fillStyle = '#3c8527';
+        // --- 4. Head (firmly on top of the torso, slight forward tilt) ---
+        const headSize = 24;
+        const headY = bodyY - headSize;
+        ctx.fillStyle = flashing ? '#ffffff' : '#3c8527';
         ctx.fillRect(-headSize / 2, headY, headSize, headSize);
         ctx.strokeRect(-headSize / 2, headY, headSize, headSize);
 
-        // Face
+        // Face (drawn forward-facing, offset toward travel)
         ctx.fillStyle = '#000000';
-        ctx.fillRect(dir * 5 - 3, headY + 8, 5, 5); // Eyes
-        ctx.fillRect(dir * -3 - 3, headY + 8, 5, 5);
-        ctx.fillRect(-2, headY + 17, 4, 4); // Mouth
+        ctx.fillRect(dir * 4 - 3, headY + 7, 4, 4);   // Eyes
+        ctx.fillRect(dir * -2 - 3, headY + 7, 4, 4);
+        ctx.fillRect(-2, headY + 15, 5, 3);           // Mouth
 
         ctx.restore();
     }
