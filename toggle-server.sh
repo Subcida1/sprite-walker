@@ -5,7 +5,6 @@
 set -euo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LOG_FILE="${PROJECT_DIR}/server.log"
 PID_FILE="${PROJECT_DIR}/server.pid"
 
 cd "${PROJECT_DIR}"
@@ -18,26 +17,23 @@ if [[ -f "${PID_FILE}" ]] && kill -0 "$(cat "${PID_FILE}")" 2>/dev/null; then
     rm -f "${PID_FILE}"
     echo "Server stopped."
 else
-    # Also check via pkill in case PID file was stale or missing
     if pgrep -f "node server/index.js" > /dev/null; then
         echo "Stopping existing Sprite Walker server processes..."
         pkill -f "node server/index.js" || true
         rm -f "${PID_FILE}"
         echo "Server stopped."
     else
-        echo "Starting Sprite Walker server..."
-        nohup node server/index.js >> "${LOG_FILE}" 2>&1 &
+        echo "Starting Sprite Walker server in foreground (Press Ctrl+C to stop)..."
+        echo "--------------------------------------------------------"
+        # Run in foreground so logs stream directly to your terminal
+        node server/index.js &
         SERVER_PID=$!
         echo ${SERVER_PID} > "${PID_FILE}"
-        sleep 1
-        if kill -0 "${SERVER_PID}" 2>/dev/null; then
-            echo "Server started successfully (PID: ${SERVER_PID})"
-            echo "Logs: tail -f ${LOG_FILE}"
-            echo "Overlay: http://localhost:3847/"
-        else
-            echo "Server failed to start — check ${LOG_FILE}"
-            rm -f "${PID_FILE}"
-            exit 1
-        fi
+        
+        # Trap Ctrl+C to clean up PID file when user exits
+        trap "kill ${SERVER_PID} 2>/dev/null; rm -f '${PID_FILE}'; exit 0" INT TERM
+        
+        wait ${SERVER_PID} || true
+        rm -f "${PID_FILE}"
     fi
 fi
