@@ -63,7 +63,6 @@ export class Sprite {
 
         this.facingRight = true;
         this.hitEffectTimer = 0;
-        this.enterDirection = 'right';
 
         this.ghostTargetX = null;
         this.ghostWaitTimer = 0;
