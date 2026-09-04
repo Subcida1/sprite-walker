@@ -1,5 +1,5 @@
 import { canvas } from '../core/canvas.js';
-import { bloodParticles } from '../core/state.js';
+import { state } from '../core/state.js';
 import { BloodParticle } from '../particles/blood.js';
 
 export class SlimeMob {
@@ -89,7 +89,7 @@ export class SlimeMob {
                         }
                         sprite.hurt();
                         for (let i = 0; i < 4; i++) {
-                            bloodParticles.push(new BloodParticle(sprite.x, sprite.y - 20));
+                            state.bloodParticles.push(new BloodParticle(sprite.x, sprite.y - 20));
                         }
                         this.attackCooldown = 1800;
                         break;
@@ -165,7 +165,7 @@ export class SlimeMob {
         this.health -= amount;
         this.hitEffectTimer = 14;
         for (let i = 0; i < 6; i++) {
-            bloodParticles.push(new BloodParticle(this.x, this.y - this.size / 2, '#2ecc71'));
+            state.bloodParticles.push(new BloodParticle(this.x, this.y - this.size / 2, '#2ecc71'));
         }
         return this.health <= 0;
     }

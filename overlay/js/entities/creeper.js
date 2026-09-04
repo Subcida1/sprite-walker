@@ -1,6 +1,5 @@
 import { canvas } from '../core/canvas.js';
 import { state } from '../core/state.js';
-import { bloodParticles } from '../core/state.js';
 import { BloodParticle } from '../particles/blood.js';
 
 export class CreeperExplosion {
@@ -158,7 +157,7 @@ export class CreeperMob {
                 }
                 sprite.hurt();
                 for (let i = 0; i < 8; i++) {
-                    bloodParticles.push(new BloodParticle(sprite.x, sprite.y, '#55ff55'));
+                    state.bloodParticles.push(new BloodParticle(sprite.x, sprite.y, '#55ff55'));
                 }
             }
         }
@@ -169,7 +168,7 @@ export class CreeperMob {
         this.health -= amount;
         this.hitEffectTimer = 14;
         for (let i = 0; i < 6; i++) {
-            bloodParticles.push(new BloodParticle(this.x, this.y - 30, '#55ff55'));
+            state.bloodParticles.push(new BloodParticle(this.x, this.y - 30, '#55ff55'));
         }
         if (this.health <= 0) {
             this.exited = true;

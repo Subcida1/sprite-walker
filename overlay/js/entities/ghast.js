@@ -1,5 +1,5 @@
 import { canvas } from '../core/canvas.js';
-import { bloodParticles } from '../core/state.js';
+import { state } from '../core/state.js';
 import { BloodParticle } from '../particles/blood.js';
 
 export class GhastFireball {
@@ -23,7 +23,7 @@ export class GhastFireball {
         if (this.y >= groundY) {
             this.exited = true;
             for (let i = 0; i < 10; i++) {
-                bloodParticles.push(new BloodParticle(this.x, groundY, '#ff4500'));
+                state.bloodParticles.push(new BloodParticle(this.x, groundY, '#ff4500'));
             }
         }
         for (const [_, sprite] of sprites) {
@@ -39,7 +39,7 @@ export class GhastFireball {
                 }
                 sprite.hurt();
                 for (let i = 0; i < 8; i++) {
-                    bloodParticles.push(new BloodParticle(sprite.x, sprite.y, '#ff3300'));
+                    state.bloodParticles.push(new BloodParticle(sprite.x, sprite.y, '#ff3300'));
                 }
                 break;
             }
@@ -150,7 +150,7 @@ export class GhastMob {
         this.health -= amount;
         this.hitEffectTimer = 14;
         for (let i = 0; i < 6; i++) {
-            bloodParticles.push(new BloodParticle(this.x, this.y, '#ffffff'));
+            state.bloodParticles.push(new BloodParticle(this.x, this.y, '#ffffff'));
         }
         return this.health <= 0;
     }

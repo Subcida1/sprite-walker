@@ -1,8 +1,6 @@
 import { canvas } from '../core/canvas.js';
 import { getAvatarImage } from '../core/assets.js';
 import { state } from '../core/state.js';
-import { bloodParticles } from '../core/state.js';
-import { ghostParticles } from '../core/state.js';
 import { BloodParticle } from '../particles/blood.js';
 import { GhostParticle } from '../particles/ghost.js';
 
@@ -207,7 +205,7 @@ export class Sprite {
         this.hitEffectTimer = 14;
         this.lastDamageTime = Date.now();
         for (let i = 0; i < 8; i++) {
-            bloodParticles.push(new BloodParticle(this.x, this.y - 30, '#ff0000'));
+            state.bloodParticles.push(new BloodParticle(this.x, this.y - 30, '#ff0000'));
         }
     }
 
@@ -260,7 +258,7 @@ export class Sprite {
         
         if (this.ascending) {
             for (let i = 0; i < 6; i++) {
-                ghostParticles.push(new GhostParticle(this.x, this.y, halfSize));
+                state.ghostParticles.push(new GhostParticle(this.x, this.y, halfSize));
             }
         }
 

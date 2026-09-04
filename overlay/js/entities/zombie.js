@@ -1,5 +1,5 @@
 import { canvas } from '../core/canvas.js';
-import { bloodParticles } from '../core/state.js';
+import { state } from '../core/state.js';
 import { BloodParticle } from '../particles/blood.js';
 
 export class ZombieMob {
@@ -109,7 +109,7 @@ export class ZombieMob {
         this.health -= amount;
         this.hitEffectTimer = 14;
         for (let i = 0; i < 6; i++) {
-            bloodParticles.push(new BloodParticle(this.x, this.y - 30, '#8b0000'));
+            state.bloodParticles.push(new BloodParticle(this.x, this.y - 30, '#8b0000'));
         }
         return this.health <= 0;
     }

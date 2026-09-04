@@ -1,5 +1,5 @@
 import { canvas } from '../core/canvas.js';
-import { bloodParticles } from '../core/state.js';
+import { state } from '../core/state.js';
 import { BloodParticle } from '../particles/blood.js';
 
 export class PhantomMob {
@@ -82,7 +82,7 @@ export class PhantomMob {
                     }
                     this.diveTarget.hurt();
                     for (let i = 0; i < 5; i++) {
-                        bloodParticles.push(new BloodParticle(this.diveTarget.x, this.diveTarget.y, '#3b5998'));
+                        state.bloodParticles.push(new BloodParticle(this.diveTarget.x, this.diveTarget.y, '#3b5998'));
                     }
                 }
                 this.state = 'climbing';
@@ -101,7 +101,7 @@ export class PhantomMob {
         this.health -= amount;
         this.hitEffectTimer = 14;
         for (let i = 0; i < 6; i++) {
-            bloodParticles.push(new BloodParticle(this.x, this.y, '#818cf8'));
+            state.bloodParticles.push(new BloodParticle(this.x, this.y, '#818cf8'));
         }
         return this.health <= 0;
     }
