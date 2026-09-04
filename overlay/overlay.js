@@ -1881,8 +1881,8 @@ class GhastMob {
         this.health = 8;
         this.maxHealth = 8;
         this.fromLeft = fromLeft;
-        this.vx = fromLeft ? 2.0 : -2.0; // Brisk single-pass flight across screen
-        this.fireCooldown = Math.floor(Math.random() * 40) + 20;
+        this.vx = fromLeft ? 0.8 : -0.8; // Original majestic flight speed
+        this.fireCooldown = Math.floor(Math.random() * 80) + 40;
         this.swayPhase = Math.random() * Math.PI * 2;
         this.hitEffectTimer = 0;
         this.exited = false;
@@ -1896,11 +1896,11 @@ class GhastMob {
 
         if (this.hitEffectTimer > 0) this.hitEffectTimer--;
 
-        // Fly across screen once and despawn when offscreen
+        // Fly across screen once and despawn immediately when reaching the opposite edge
         this.x += this.vx;
-        if (this.fromLeft && this.x > canvas.width + 120) {
+        if (this.fromLeft && this.x > canvas.width) {
             this.exited = true;
-        } else if (!this.fromLeft && this.x < -120) {
+        } else if (!this.fromLeft && this.x < 0) {
             this.exited = true;
         }
 
