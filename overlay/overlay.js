@@ -1064,12 +1064,16 @@ class SlimeMob {
 
     update() {
         this.groundY = canvas.height - 25;
-        // Silky-smooth slime-to-slime soft dispersion (prevents clumping, zero player interaction)
+
+        // Silky-smooth slime-to-slime soft dispersion using wrapped distance
         for (const other of slimeMobs) {
             if (other === this) continue;
-            const dist = Math.abs(other.x - this.x);
+            let diff = other.x - this.x;
+            if (diff > canvas.width / 2) diff -= canvas.width;
+            if (diff < -canvas.width / 2) diff += canvas.width;
+            const dist = Math.abs(diff);
             if (dist < 55 && dist > 0) {
-                const glideDir = Math.sign(this.x - other.x);
+                const glideDir = Math.sign(diff);
                 this.x += glideDir * 0.35;
             }
         }
@@ -1080,11 +1084,14 @@ class SlimeMob {
         if (!this.attackCooldown) this.attackCooldown = 0;
         if (this.attackCooldown > 0) this.attackCooldown--;
 
-        // Pass-by random hit check (3% chance when a player is within 30px, not on cooldown)
+        // Neutral pass-by random hit check (3% chance when a player is within 30px wrapped distance, not on cooldown)
         if (this.attackCooldown === 0) {
             for (const [key, sprite] of sprites) {
                 if (sprite.isGhost) continue;
-                if (Math.abs(sprite.x - this.x) <= 30) {
+                let diff = sprite.x - this.x;
+                if (diff > canvas.width / 2) diff -= canvas.width;
+                if (diff < -canvas.width / 2) diff += canvas.width;
+                if (Math.abs(diff) <= 30) {
                     if (Math.random() < 0.03) {
                         if (wsInstance && wsInstance.readyState === WebSocket.OPEN) {
                             wsInstance.send(JSON.stringify({
@@ -1104,21 +1111,7 @@ class SlimeMob {
             }
         }
 
-        // Periodic 10-minute forced hunt check
-        this.ageInFrames++;
-        if (this.ageInFrames >= this.nextHuntFrame) {
-            this.nextHuntFrame = this.ageInFrames + 36000 + Math.floor(Math.random() * 7200); // 10-12 min
-            const validPlayers = [];
-            for (const [key, sprite] of sprites) {
-                if (!sprite.isGhost) validPlayers.push(sprite);
-            }
-            if (validPlayers.length > 0) {
-                const randomPlayer = validPlayers[Math.floor(Math.random() * validPlayers.length)];
-                this.targetSprite = randomPlayer;
-                this.forcedHuntActive = true;
-                console.log(`[Slime] 10-minute forced hunt triggered targeting ${randomPlayer.username}!`);
-            }
-        }
+        // Slimes are neutral ambient wanderers — no player chasing or forced hunt!
 
         // Find nearest un-ghosted player
         let nearest = null;
@@ -1136,65 +1129,7 @@ class SlimeMob {
             this.targetSprite = nearest;
         }
 
-        if (this.forcedHuntActive && (!this.targetSprite || this.targetSprite.isGhost)) {
-            this.forcedHuntActive = false;
-        }
-
-        let targetDist = this.targetSprite ? Math.abs(this.targetSprite.x - this.x) : Infinity;
-
-        if (this.targetSprite && (targetDist < 140 || this.forcedHuntActive)) {
-            // Chase player (hysteresis band prevents chase/reach flicker)
-            const dx = this.targetSprite.x - this.x;
-            this.facingRight = dx > 0;
-            // Standoff attack range (40px): slimes close in but never overlap or push players.
-            const baseReach = 40.0;
-            // Use hysteresis: once in chase, keep chasing until within 60% of reach
-            const chaseThresh = this.isInChase ? baseReach * 0.6 : baseReach;
-
-            if (Math.abs(dx) > chaseThresh) {
-                this.isInChase = true;
-                // Per-hop speed fluctuation for unique movement pacing
-                if (Math.random() < 0.35) this.speed = this.baseSpeed * (0.4 + Math.random() * 1.8);
-                const moveStep = Math.sign(dx) * (this.speed * 1.1);
-                this.x += moveStep;
-
-                this.chaseDist = (this.chaseDist || 0) + Math.abs(moveStep);
-                const hopCycle = 45; // pixels per hop cycle during chase
-                const sinVal = Math.sin((this.chaseDist / hopCycle) * Math.PI);
-                const hopHeight = this.size * 0.4;
-                this.y = this.groundY - Math.abs(sinVal) * hopHeight;
-                this.squashX = 1 + sinVal * 0.18;
-                this.squashY = 1 - sinVal * 0.18;
-            } else {
-                // In reach — attack player (stand completely still, flat on ground)
-                this.isInChase = false;
-                this.chaseDist = 0;
-                this.y = this.groundY;
-                this.squashX = 1;
-                this.squashY = 1;
-                if (!this.attackCooldown) this.attackCooldown = 0;
-                if (this.attackCooldown > 0) {
-                    this.attackCooldown--;
-                } else {
-                    // Send damage request to server (authoritative health)
-                    if (wsInstance && wsInstance.readyState === WebSocket.OPEN) {
-                        wsInstance.send(JSON.stringify({
-                            type: 'SLIME_ATTACK_PLAYER',
-                            target: this.targetSprite.username,
-                            damage: this.damage
-                        }));
-                    }
-                    this.targetSprite.hurt();
-                    for (let i = 0; i < 4; i++) {
-                        bloodParticles.push(new BloodParticle(this.targetSprite.x, this.targetSprite.y - 20));
-                    }
-                    this.attackCooldown = this.tier === 'big' ? 1800 : (this.tier === 'medium' ? 2100 : 2400); // 30-40s cooldown
-                    this.forcedHuntActive = false;
-                }
-            }
-            return;
-        }
-        this.isInChase = false;
+        
 
         if (this.state === 'idle') {
             this.y = this.groundY;
