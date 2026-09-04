@@ -1064,6 +1064,11 @@ class SlimeMob {
 
     update() {
         this.groundY = canvas.height - 25;
+        if (!this.age) this.age = 0;
+        this.age++;
+        if (this.age >= 18000) {
+            this.exited = true;
+        }
 
         // Silky-smooth slime-to-slime soft dispersion using wrapped distance
         for (const other of slimeMobs) {
@@ -1430,6 +1435,11 @@ class CreeperMob {
 
     update() {
         this.groundY = canvas.height - 25;
+        if (!this.age) this.age = 0;
+        this.age++;
+        if (this.age >= 18000) {
+            this.exited = true;
+        }
 
         // Separation steering from other creepers/slimes
         for (const other of [...slimeMobs, ...creeperMobs]) {
@@ -1662,6 +1672,11 @@ class ZombieMob {
     update() {
         this.groundY = canvas.height - 25;
         this.y = this.groundY;
+        if (!this.age) this.age = 0;
+        this.age++;
+        if (this.age >= 18000) {
+            this.exited = true;
+        }
 
         // Separation steering
         for (const other of [...slimeMobs, ...creeperMobs, ...zombieMobs]) {
@@ -2530,38 +2545,42 @@ function animate() {
         }
     }
 
-    // Slime Mobs — update, draw, and periodic spawn (randomized ~10 min intervals)
-    if (!window.nextSlimeSpawnIn) {
-        window.nextSlimeSpawnIn = Math.floor(Math.random() * 14400) + 28800; // 8-12 min @ 60fps
+    // Surface Mob Wave Spawner (5–10 min, packs of 1–3 mixed mobs)
+    if (!window.nextSurfaceMobSpawnIn) {
+        window.nextSurfaceMobSpawnIn = Math.floor(Math.random() * 18000) + 18000; // 5–10 min @ 60fps
     }
-    if (++slimeSpawnTimer >= window.nextSlimeSpawnIn) {
-        slimeSpawnTimer = 0;
-        window.nextSlimeSpawnIn = Math.floor(Math.random() * 14400) + 28800; // re-roll for next spawn
-        if (slimeMobs.length < 2) { // cap at 2 active big slimes
-            spawnSlimeFromEdge();
+    if (!window.surfaceMobSpawnTimer) window.surfaceMobSpawnTimer = 0;
+    if (++window.surfaceMobSpawnTimer >= window.nextSurfaceMobSpawnIn) {
+        window.surfaceMobSpawnTimer = 0;
+        window.nextSurfaceMobSpawnIn = Math.floor(Math.random() * 18000) + 18000;
+        const totalMobs = slimeMobs.length + creeperMobs.length + zombieMobs.length;
+        if (totalMobs < 8) {
+            const packSize = Math.floor(Math.random() * 3) + 1; // 1–3 mobs
+            console.log(`[Surface Mobs] Spawning wave of ${packSize} mob(s)!`);
+            for (let i = 0; i < packSize; i++) {
+                const roll = Math.random();
+                if (roll < 0.35) {
+                    spawnSlimeFromEdge();
+                } else if (roll < 0.7) {
+                    spawnCreeperFromEdge();
+                } else {
+                    spawnZombieFromEdge();
+                }
+            }
         }
     }
+
+    // Slime Mobs — update, draw, cleanup
     for (let i = slimeMobs.length - 1; i >= 0; i--) {
         const s = slimeMobs[i];
         s.update();
         s.draw(ctx);
-        // Remove dead slimes or slimes that have exited offscreen
         if (s.health <= 0 || s.exited) {
             slimeMobs.splice(i, 1);
         }
     }
 
-    // Creeper Mobs — update, draw, explosions, and periodic spawn
-    if (!window.nextCreeperSpawnIn) {
-        window.nextCreeperSpawnIn = Math.floor(Math.random() * 18000) + 36000; // 10-15 min @ 60fps
-    }
-    if (++creeperSpawnTimer >= window.nextCreeperSpawnIn) {
-        creeperSpawnTimer = 0;
-        window.nextCreeperSpawnIn = Math.floor(Math.random() * 18000) + 36000;
-        if (slimeMobs.length + creeperMobs.length < 6) {
-            spawnCreeperFromEdge();
-        }
-    }
+    // Creeper Mobs — update, draw, explosions, cleanup
     for (let i = creeperMobs.length - 1; i >= 0; i--) {
         const c = creeperMobs[i];
         c.update();
@@ -2579,17 +2598,7 @@ function animate() {
         }
     }
 
-    // Zombie Mobs — update, draw, and periodic spawn
-    if (!window.nextZombieSpawnIn) {
-        window.nextZombieSpawnIn = Math.floor(Math.random() * 18000) + 48000; // 13-20 min @ 60fps
-    }
-    if (++zombieSpawnTimer >= window.nextZombieSpawnIn) {
-        zombieSpawnTimer = 0;
-        window.nextZombieSpawnIn = Math.floor(Math.random() * 18000) + 48000;
-        if (slimeMobs.length + creeperMobs.length + zombieMobs.length < 8) {
-            spawnZombieFromEdge();
-        }
-    }
+    // Zombie Mobs — update, draw, cleanup
     for (let i = zombieMobs.length - 1; i >= 0; i--) {
         const z = zombieMobs[i];
         z.update();

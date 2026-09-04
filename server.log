@@ -2,51 +2,25 @@
 > sprite-walker@1.0.0 start
 > node server/index.js
 
-[2026-09-04T07:52:03.061Z] Sprite Walker server running at http://localhost:3847
-[2026-09-04T07:52:03.062Z] Listening to Twitch channel: #subcidal
-[2026-09-04T07:52:03.062Z] Max sprites: 50
-[2026-09-04T07:52:03.062Z] Cooldowns: wave=4000ms, attack=5000ms
-[2026-09-04T07:52:03.061Z] Sprite Walker server running at http://localhost:3847
-[2026-09-04T07:52:03.062Z] Listening to Twitch channel: #subcidal
-[2026-09-04T07:52:03.062Z] Max sprites: 50
-[2026-09-04T07:52:03.062Z] Cooldowns: wave=4000ms, attack=5000ms
-[2026-09-04T07:52:05.041Z] OBS Overlay connected via WebSocket
-[2026-09-04T07:52:05.041Z] OBS Overlay connected via WebSocket
-[2026-09-04T07:52:08.671Z] OBS Overlay disconnected
-[2026-09-04T07:52:08.671Z] OBS Overlay disconnected
-[2026-09-04T07:52:08.688Z] OBS Overlay connected via WebSocket
-[2026-09-04T07:52:08.688Z] OBS Overlay connected via WebSocket
-[2026-09-04T07:52:13.171Z] [Twitch] Subcidal: !join
-[2026-09-04T07:52:13.171Z] [Twitch] Subcidal: !join
-[2026-09-04T07:52:13.171Z] [Join] Subcidal joined with Minecraft skin: Subcidal
-[2026-09-04T07:52:13.171Z] [Join] Subcidal joined with Minecraft skin: Subcidal
-[2026-09-04T07:52:13.976Z] [Twitch] Subcidal: !ai
-[2026-09-04T07:52:13.976Z] [Twitch] Subcidal: !ai
-[2026-09-04T07:52:13.976Z] [AI Spawn] AI character spawned with Steve skin
-[2026-09-04T07:52:13.976Z] [AI Spawn] AI character spawned with Steve skin
-[2026-09-04T07:52:15.381Z] [Twitch] Subcidal: !ghast
-[2026-09-04T07:52:15.381Z] [Ghast] Manual ghast spawn requested by Subcidal
-[2026-09-04T07:52:15.381Z] [Twitch] Subcidal: !ghast
-[2026-09-04T07:52:15.381Z] [Ghast] Manual ghast spawn requested by Subcidal
-[2026-09-04T07:52:17.353Z] [Twitch] Subcidal: !zombie
-[2026-09-04T07:52:17.353Z] [Twitch] Subcidal: !zombie
-[2026-09-04T07:52:17.354Z] [Zombie] Manual zombie spawn requested by Subcidal
-[2026-09-04T07:52:17.354Z] [Zombie] Manual zombie spawn requested by Subcidal
-[2026-09-04T07:52:19.752Z] [Twitch] Subcidal: !creeper
-[2026-09-04T07:52:19.753Z] [Creeper] Manual creeper spawn requested by Subcidal
-[2026-09-04T07:52:19.752Z] [Twitch] Subcidal: !creeper
-[2026-09-04T07:52:19.753Z] [Creeper] Manual creeper spawn requested by Subcidal
-[2026-09-04T07:52:34.416Z] [Ghast Fireball] Ghast fireball hit AI for -50 HP (50/100)
-[2026-09-04T07:52:34.416Z] [Ghast Fireball] Ghast fireball hit AI for -50 HP (50/100)
-[2026-09-04T07:52:43.216Z] [Phantom Attack] Phantom dive-bombed Subcidal for -25 HP (75/100)
-[2026-09-04T07:52:43.216Z] [Phantom Attack] Phantom dive-bombed Subcidal for -25 HP (75/100)
-[2026-09-04T07:52:55.083Z] [Creeper Explosion] Creeper blew up Subcidal for -120 HP (0/100)
-[2026-09-04T07:52:55.083Z] [Creeper Explosion] Creeper blew up Subcidal for -120 HP (0/100)
-[2026-09-04T07:52:55.085Z] [Ghost] Subcidal was blown up by a Creeper and entered GHOST mode!
-[2026-09-04T07:52:55.085Z] [Ghost] Subcidal was blown up by a Creeper and entered GHOST mode!
-[2026-09-04T07:52:56.116Z] [Phantom Attack] Phantom dive-bombed AI for -25 HP (25/100)
-[2026-09-04T07:52:56.116Z] [Phantom Attack] Phantom dive-bombed AI for -25 HP (25/100)
-[2026-09-04T07:53:42.449Z] [Zombie Attack] Zombie hit AI for -30 HP (0/100)
-[2026-09-04T07:53:42.449Z] [Zombie Attack] Zombie hit AI for -30 HP (0/100)
-[2026-09-04T07:53:42.449Z] [Ghost] AI was killed by a Zombie and entered GHOST mode!
-[2026-09-04T07:53:42.449Z] [Ghost] AI was killed by a Zombie and entered GHOST mode!
+[2026-09-04T07:58:38.491Z] Sprite Walker server running at http://localhost:3847
+[2026-09-04T07:58:38.492Z] Listening to Twitch channel: #subcidal
+[2026-09-04T07:58:38.492Z] Max sprites: 50
+[2026-09-04T07:58:38.492Z] Cooldowns: wave=4000ms, attack=5000ms
+[2026-09-04T07:58:38.491Z] Sprite Walker server running at http://localhost:3847
+[2026-09-04T07:58:38.492Z] Listening to Twitch channel: #subcidal
+[2026-09-04T07:58:38.492Z] Max sprites: 50
+[2026-09-04T07:58:38.492Z] Cooldowns: wave=4000ms, attack=5000ms
+[2026-09-04T07:58:42.014Z] OBS Overlay connected via WebSocket
+[2026-09-04T07:58:42.014Z] OBS Overlay connected via WebSocket
+[2026-09-04T07:58:47.910Z] OBS Overlay disconnected
+[2026-09-04T07:58:47.910Z] OBS Overlay disconnected
+[2026-09-04T07:58:47.954Z] OBS Overlay connected via WebSocket
+[2026-09-04T07:58:47.954Z] OBS Overlay connected via WebSocket
+[2026-09-04T07:58:53.609Z] [Twitch] Subcidal: !join
+[2026-09-04T07:58:53.609Z] [Twitch] Subcidal: !join
+[2026-09-04T07:58:53.609Z] [Join] Subcidal joined with Minecraft skin: Subcidal
+[2026-09-04T07:58:53.609Z] [Join] Subcidal joined with Minecraft skin: Subcidal
+[2026-09-04T07:58:55.609Z] [Twitch] Subcidal: !ai
+[2026-09-04T07:58:55.609Z] [Twitch] Subcidal: !ai
+[2026-09-04T07:58:55.609Z] [AI Spawn] AI character spawned with Steve skin
+[2026-09-04T07:58:55.609Z] [AI Spawn] AI character spawned with Steve skin
